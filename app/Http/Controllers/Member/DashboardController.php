@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Member;
 
+use App\Enums\RegistrationStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +16,7 @@ class DashboardController extends Controller
         $upcomingRegistrations = $user->registrations()
             ->with('conversationTable')
             ->whereHas('conversationTable', fn ($q) => $q->where('scheduled_at', '>', now()))
-            ->whereIn('status', ['registered'])
+            ->whereIn('status', [RegistrationStatus::Registered->value])
             ->orderBy('registered_at')
             ->take(5)
             ->get();

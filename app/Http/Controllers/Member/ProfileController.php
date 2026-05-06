@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Member;
 
+use App\Actions\User\AnonymizeUserAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Services\Vat\VatValidationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +12,6 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function __construct(private readonly VatValidationService $vat) {}
-
     public function show(Request $request): View
     {
         return view('espace.profil', [
@@ -38,16 +36,6 @@ class ProfileController extends Controller
         }
 
         $user->save();
-
-        if ($user->company && isset($validated['company_name'])) {
-            $user->company->update([
-                'name'          => $validated['company_name'],
-                'street'        => $validated['street'],
-                'postal_code'   => $validated['postal_code'],
-                'city'          => $validated['city'],
-                'billing_email' => $validated['billing_email'] ?? null,
-            ]);
-        }
 
         return redirect()->route('espace.profil')->with('status', 'profile-updated');
     }
@@ -98,7 +86,7 @@ class ProfileController extends Controller
         );
     }
 
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, AnonymizeUserAction $anonymize): RedirectResponse
     {
         $request->validateWithBag('accountDeletion', [
             'password' => ['required', 'current_password'],
@@ -108,6 +96,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
+        $anonymize->execute($user);
         $user->delete();
 
         $request->session()->invalidate();

@@ -55,18 +55,22 @@ class RegisteredUserController extends Controller
             ]);
         }
 
+        if (Company::where('vat_number', $vatNormalized)->exists()) {
+            throw ValidationException::withMessages([
+                'vat_number' => 'Une société est déjà enregistrée avec ce numéro de TVA. Pour rejoindre cette société, demandez à un administrateur de vous inviter, ou contactez-nous.',
+            ]);
+        }
+
         $user = DB::transaction(function () use ($request, $vatNormalized): User {
-            $company = Company::firstOrCreate(
-                ['vat_number' => $vatNormalized],
-                [
-                    'name'          => $request->company_name,
-                    'street'        => $request->street,
-                    'postal_code'   => $request->postal_code,
-                    'city'          => $request->city,
-                    'country'       => 'Belgique',
-                    'billing_email' => $request->billing_email,
-                ]
-            );
+            $company = Company::create([
+                'name'          => $request->company_name,
+                'vat_number'    => $vatNormalized,
+                'street'        => $request->street,
+                'postal_code'   => $request->postal_code,
+                'city'          => $request->city,
+                'country'       => 'Belgique',
+                'billing_email' => $request->billing_email,
+            ]);
 
             return User::create([
                 'first_name' => $request->first_name,

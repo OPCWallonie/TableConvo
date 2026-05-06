@@ -7,7 +7,7 @@ test('profile page is displayed', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/profile');
+        ->get('/espace/profil');
 
     $response->assertOk();
 });
@@ -17,15 +17,15 @@ test('profile information can be updated', function () {
 
     $response = $this
         ->actingAs($user)
-        ->patch('/profile', [
+        ->patch('/espace/profil', [
             'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'test@example.com',
+            'last_name'  => 'User',
+            'email'      => 'test@example.com',
         ]);
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertRedirect('/espace/profil');
 
     $user->refresh();
 
@@ -40,15 +40,15 @@ test('email verification status is unchanged when the email address is unchanged
 
     $response = $this
         ->actingAs($user)
-        ->patch('/profile', [
+        ->patch('/espace/profil', [
             'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'email' => $user->email,
+            'last_name'  => $user->last_name,
+            'email'      => $user->email,
         ]);
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertRedirect('/espace/profil');
 
     $this->assertNotNull($user->refresh()->email_verified_at);
 });
@@ -58,7 +58,7 @@ test('user can delete their account', function () {
 
     $response = $this
         ->actingAs($user)
-        ->delete('/profile', [
+        ->delete('/espace/compte', [
             'password' => 'password',
         ]);
 
@@ -71,19 +71,34 @@ test('user can delete their account', function () {
     $this->assertNotNull($user->fresh()->deleted_at);
 });
 
+test('user account is anonymized on deletion', function () {
+    $user = User::factory()->create();
+    $userId = $user->id;
+
+    $this
+        ->actingAs($user)
+        ->delete('/espace/compte', ['password' => 'password']);
+
+    $deleted = User::withTrashed()->find($userId);
+    $this->assertSame('Compte', $deleted->first_name);
+    $this->assertSame('supprimé', $deleted->last_name);
+    $this->assertSame("deleted-{$userId}@deleted.local", $deleted->email);
+    $this->assertNull($deleted->phone);
+});
+
 test('correct password must be provided to delete account', function () {
     $user = User::factory()->create();
 
     $response = $this
         ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
+        ->from('/espace/profil')
+        ->delete('/espace/compte', [
             'password' => 'wrong-password',
         ]);
 
     $response
-        ->assertSessionHasErrorsIn('userDeletion', 'password')
-        ->assertRedirect('/profile');
+        ->assertSessionHasErrorsIn('accountDeletion', 'password')
+        ->assertRedirect('/espace/profil');
 
     $this->assertNotNull($user->fresh());
 });

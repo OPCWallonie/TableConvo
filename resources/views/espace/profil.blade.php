@@ -65,54 +65,6 @@
                         <x-input-error class="mt-2" :messages="$errors->get('phone')" />
                     </div>
 
-                    @if ($user->company)
-                        <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide pt-2">Société</h3>
-
-                        <div>
-                            <x-input-label for="company_name" value="Nom de la société" />
-                            <x-text-input id="company_name" name="company_name" type="text" class="mt-1 block w-full"
-                                :value="old('company_name', $user->company->name)" required autocomplete="organization" />
-                            <x-input-error class="mt-2" :messages="$errors->get('company_name')" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="vat_number" value="Numéro de TVA" />
-                            <x-text-input id="vat_number" type="text" class="mt-1 block w-full bg-gray-50"
-                                :value="$user->company->vat_number" readonly />
-                            <p class="mt-1 text-xs text-gray-500">Non modifiable. Contactez-nous si nécessaire.</p>
-                        </div>
-
-                        <div>
-                            <x-input-label for="street" value="Rue et numéro" />
-                            <x-text-input id="street" name="street" type="text" class="mt-1 block w-full"
-                                :value="old('street', $user->company->street)" required autocomplete="street-address" />
-                            <x-input-error class="mt-2" :messages="$errors->get('street')" />
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="col-span-1">
-                                <x-input-label for="postal_code" value="Code postal" />
-                                <x-text-input id="postal_code" name="postal_code" type="text" class="mt-1 block w-full"
-                                    :value="old('postal_code', $user->company->postal_code)" required autocomplete="postal-code" />
-                                <x-input-error class="mt-2" :messages="$errors->get('postal_code')" />
-                            </div>
-
-                            <div class="col-span-2">
-                                <x-input-label for="city" value="Ville" />
-                                <x-text-input id="city" name="city" type="text" class="mt-1 block w-full"
-                                    :value="old('city', $user->company->city)" required autocomplete="address-level2" />
-                                <x-input-error class="mt-2" :messages="$errors->get('city')" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <x-input-label for="billing_email" value="E-mail de facturation (optionnel)" />
-                            <x-text-input id="billing_email" name="billing_email" type="email" class="mt-1 block w-full"
-                                :value="old('billing_email', $user->company->billing_email)" />
-                            <x-input-error class="mt-2" :messages="$errors->get('billing_email')" />
-                        </div>
-                    @endif
-
                     <div class="flex items-center gap-4 pt-2">
                         <x-primary-button>Enregistrer</x-primary-button>
 
@@ -124,6 +76,23 @@
                     </div>
                 </form>
             </div>
+
+            {{-- Société (lecture seule) --}}
+            @if ($user->company)
+                <div class="bg-white shadow sm:rounded-lg p-6">
+                    <h3 class="text-base font-medium text-gray-900 mb-1">Ma société</h3>
+                    <p class="text-xs text-gray-500 mb-4">Pour modifier les informations de votre société, contactez un administrateur.</p>
+
+                    <dl class="space-y-2 text-sm text-gray-700">
+                        <div><dt class="font-medium">Société</dt><dd>{{ $user->company->name }}</dd></div>
+                        <div><dt class="font-medium">TVA</dt><dd>{{ $user->company->vat_number }}</dd></div>
+                        <div><dt class="font-medium">Adresse</dt><dd>{{ $user->company->street }}, {{ $user->company->postal_code }} {{ $user->company->city }}</dd></div>
+                        @if ($user->company->billing_email)
+                            <div><dt class="font-medium">E-mail facturation</dt><dd>{{ $user->company->billing_email }}</dd></div>
+                        @endif
+                    </dl>
+                </div>
+            @endif
 
             {{-- Niveau --}}
             <div class="bg-white shadow sm:rounded-lg p-6">
@@ -155,7 +124,7 @@
             <div class="bg-white shadow sm:rounded-lg p-6">
                 <h3 class="text-base font-medium text-gray-900 mb-2">Supprimer mon compte</h3>
                 <p class="text-sm text-gray-600 mb-4">
-                    La suppression désactive votre accès. Vos factures sont conservées 7 ans conformément à la législation belge.
+                    La suppression désactive votre accès et anonymise vos données personnelles. Vos factures sont conservées 7 ans conformément à la législation belge.
                 </p>
 
                 <x-danger-button
