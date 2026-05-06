@@ -6,9 +6,9 @@ use Spatie\LaravelSettings\Settings;
 
 class MollieSettings extends Settings
 {
-    public string $api_key = '';
+    public ?string $api_key = null;
     public bool $test_mode = true;
-    public string $webhook_secret = '';
+    public ?string $webhook_secret = null;
 
     public static function group(): string
     {

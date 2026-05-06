@@ -6,7 +6,7 @@ use App\Settings\CompanySettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -139,7 +139,7 @@ class ManageCompanySettings extends Page
     {
         $data = $this->getSchema('form')->getState();
         $settings = app(CompanySettings::class);
-        $settings->fill($data)->save();
+        $settings->fill(array_map(fn ($v) => $v ?? '', $data))->save();
 
         Notification::make()
             ->title('Paramètres société enregistrés.')
