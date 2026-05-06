@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php --version)",
+      "Bash(composer --version)",
+      "Bash(mysql --version)",
+      "Bash(composer create-project *)",
+      "Bash(cp -r /Applications/MAMP/htdocs/TableConvoTemp/. /Applications/MAMP/htdocs/TableConvo/)",
+      "Bash(rm -rf /Applications/MAMP/htdocs/TableConvoTemp)",
+      "Bash(mysql *)",
+      "Bash(composer require *)",
+      "Bash(composer show *)",
+      "Bash(composer info *)",
+      "Bash(php artisan *)",
+      "Bash(git init *)",
+      "Bash(git branch *)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git add *)"
+    ]
+  }
+}
