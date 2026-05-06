@@ -42,7 +42,7 @@ class CancelSessionAction
                     $thresholdDays = $this->settings->post_cancellation_extension_threshold_days;
                     $extensionDays = $this->settings->post_cancellation_card_extension_days;
 
-                    if ($card->expires_at->diffInDays(now()) <= $thresholdDays) {
+                    if (now()->lt($card->expires_at) && now()->diffInDays($card->expires_at) <= $thresholdDays) {
                         $card->update(['expires_at' => Carbon::parse($card->expires_at)->addDays($extensionDays)]);
                     }
                 }

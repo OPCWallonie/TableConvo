@@ -21,7 +21,7 @@ it('generates sequential invoice numbers', function () {
     expect($third)->toBe("FAC-{$year}-00003");
 });
 
-it('never generates duplicate invoice numbers under concurrency', function () {
+it('generates unique sequential numbers', function () {
     $settings = app(InvoicingSettings::class);
     $action = new GenerateInvoiceNumberAction($settings);
 

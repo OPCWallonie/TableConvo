@@ -3,12 +3,11 @@
 namespace App\Actions\Registration;
 
 use App\Enums\RegistrationStatus;
-use App\Models\Card;
+use App\Enums\SessionStatus;
 use App\Models\ConversationTable;
 use App\Models\User;
 use App\Settings\BookingSettings;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class CheckRegistrationRulesAction
 {
@@ -19,6 +18,10 @@ class CheckRegistrationRulesAction
      */
     public function execute(User $user, ConversationTable $table, bool $forWaitlist = false): array
     {
+        if ($table->status !== SessionStatus::Scheduled) {
+            return ['allowed' => false, 'reason' => 'session_not_available'];
+        }
+
         if (! $user->hasLevel()) {
             return ['allowed' => false, 'reason' => 'no_level'];
         }
