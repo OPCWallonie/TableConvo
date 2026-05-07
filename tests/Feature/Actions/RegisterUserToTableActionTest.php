@@ -181,3 +181,52 @@ it('blocks when user has no active card', function () {
     expect(fn () => app(RegisterUserToTableAction::class)->execute($user, $table))
         ->toThrow(RuntimeException::class, 'no_active_card');
 });
+
+// --- Waitlist ---
+
+it('waitlist registration is allowed even without active card', function () {
+    $level = Level::factory()->create();
+    $user = User::factory()->withLevel($level)->create(); // pas de carte
+    $table = makeTable($level);
+
+    $registration = app(RegisterUserToTableAction::class)->execute($user, $table, forWaitlist: true);
+
+    expect($registration->status)->toBe(RegistrationStatus::Waitlist);
+    expect($registration->card_id)->toBeNull();
+    expect($registration->waitlist_position)->toBe(1);
+});
+
+it('waitlist assigns sequential positions', function () {
+    $level = Level::factory()->create();
+    $userA = User::factory()->withLevel($level)->create();
+    $userB = User::factory()->withLevel($level)->create();
+    $table = makeTable($level);
+
+    $regA = app(RegisterUserToTableAction::class)->execute($userA, $table, forWaitlist: true);
+    $regB = app(RegisterUserToTableAction::class)->execute($userB, $table, forWaitlist: true);
+
+    expect($regA->waitlist_position)->toBe(1);
+    expect($regB->waitlist_position)->toBe(2);
+});
+
+it('waitlist blocks if already Registered on the same table', function () {
+    $level = Level::factory()->create();
+    $user = makeUserWithCard($level);
+    $table = makeTable($level);
+
+    app(RegisterUserToTableAction::class)->execute($user, $table); // inscription normale
+
+    expect(fn () => app(RegisterUserToTableAction::class)->execute($user, $table, forWaitlist: true))
+        ->toThrow(RuntimeException::class, 'already_registered');
+});
+
+it('waitlist blocks if already on Waitlist on the same table', function () {
+    $level = Level::factory()->create();
+    $user = User::factory()->withLevel($level)->create();
+    $table = makeTable($level);
+
+    app(RegisterUserToTableAction::class)->execute($user, $table, forWaitlist: true);
+
+    expect(fn () => app(RegisterUserToTableAction::class)->execute($user, $table, forWaitlist: true))
+        ->toThrow(RuntimeException::class, 'already_registered');
+});
