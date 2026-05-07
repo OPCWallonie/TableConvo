@@ -26,6 +26,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         'company_id',
         'level_id',
         'level_assigned_at',
+        'interview_requested_at',
     ];
 
     protected $hidden = [
@@ -36,9 +37,10 @@ class User extends Authenticatable implements FilamentUser, HasName
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'level_assigned_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'        => 'datetime',
+            'level_assigned_at'        => 'datetime',
+            'interview_requested_at'   => 'datetime',
+            'password'                 => 'hashed',
         ];
     }
 

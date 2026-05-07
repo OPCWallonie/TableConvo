@@ -81,28 +81,7 @@
 
                 {{-- CTA --}}
                 <div class="px-6 pb-6">
-                    {{--
-                        Étape F : remplacer ce bloc par
-                        <livewire:agenda.register-button :table="$table" />
-                    --}}
-                    @auth
-                        @if($isFull)
-                            <button disabled
-                                    class="w-full py-2.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed">
-                                Complet — vous pouvez rejoindre la liste d'attente
-                            </button>
-                        @else
-                            <button disabled
-                                    class="w-full py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white opacity-60 cursor-not-allowed">
-                                S'inscrire (disponible prochainement)
-                            </button>
-                        @endif
-                    @else
-                        <a href="{{ route('login') }}"
-                           class="block w-full text-center py-2.5 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors">
-                            Se connecter pour s'inscrire
-                        </a>
-                    @endauth
+                    <livewire:agenda.register-button :table="$table" />
                 </div>
             </div>
 

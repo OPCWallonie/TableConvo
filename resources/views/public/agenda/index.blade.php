@@ -130,28 +130,7 @@
                                             Voir le détail
                                         </a>
 
-                                        {{--
-                                            Étape F : remplacer ce bloc par
-                                            <livewire:agenda.register-button :table="$table" />
-                                        --}}
-                                        @auth
-                                            @if($isFull)
-                                                <a href="{{ route('tables.show', $table) }}"
-                                                   class="inline-block text-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                                                    Liste d'attente
-                                                </a>
-                                            @else
-                                                <a href="{{ route('tables.show', $table) }}"
-                                                   class="inline-block text-center px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors">
-                                                    S'inscrire
-                                                </a>
-                                            @endif
-                                        @else
-                                            <a href="{{ route('login') }}"
-                                               class="inline-block text-center px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors">
-                                                Se connecter pour s'inscrire
-                                            </a>
-                                        @endauth
+                                            <livewire:agenda.register-button :table="$table" :key="$table->id" />
                                     </div>
                                 </div>
                             </div>

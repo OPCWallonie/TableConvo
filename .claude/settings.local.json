@@ -18,7 +18,12 @@
       "Bash(git remote *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(xargs ls -la)",
+      "Bash(xargs grep -l '$this->getSchema\\\\|getSchema\\\\b')",
+      "Bash(grep -rn 'renderSchemaComponents\\\\|schemaComponent\\\\|{{ $this->' /Applications/MAMP/htdocs/TableConvo/vendor/filament/schemas/resources/views/)",
+      "Bash(xargs sed -i '' 's/use Filament\\\\\\\\Forms\\\\\\\\Components\\\\\\\\Section;/use Filament\\\\\\\\Schemas\\\\\\\\Components\\\\\\\\Section;/g')",
+      "Bash(2>&1)"
     ]
   }
 }

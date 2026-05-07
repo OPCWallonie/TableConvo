@@ -3,23 +3,27 @@
 namespace App\Actions\User;
 
 use App\Models\User;
-use App\Settings\EmailSettings;
-use Illuminate\Support\Facades\Mail;
+use App\Notifications\NotifyAdminOfLevelInterviewNeeded;
 
 class RequestLevelInterviewAction
 {
-    public function __construct(private readonly EmailSettings $emailSettings) {}
-
     public function execute(User $user): void
     {
-        $adminEmail = $this->emailSettings->admin_notifications_email;
-        if (empty($adminEmail)) {
+        // Gating : ne notifie l'admin qu'une seule fois par utilisateur
+        if ($user->interview_requested_at !== null) {
             return;
         }
+
+        $user->update(['interview_requested_at' => now()]);
 
         activity()
             ->performedOn($user)
             ->causedBy($user)
-            ->log('Demande d\'entretien de niveau déclenchée (premier essai d\'inscription sans niveau)');
+            ->log("Demande d'entretien de niveau — première tentative d'inscription sans niveau");
+
+        // Notifie tous les admins (rôle 'admin') pour assertSentTo testable
+        User::role('admin')->get()->each(
+            fn (User $admin) => $admin->notify(new NotifyAdminOfLevelInterviewNeeded($user))
+        );
     }
 }
