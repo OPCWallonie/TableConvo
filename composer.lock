@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8bab69b6d07e0640d3736d0604f12692",
+    "content-hash": "c9d40a5861398806a43779ba7fda2318",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6089,6 +6089,76 @@
                 }
             ],
             "time": "2022-12-17T21:53:22+00:00"
+        },
+        {
+            "name": "spatie/holidays",
+            "version": "2.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/holidays.git",
+                "reference": "c7b15481ecd230114a8c9378ba15c083187bfb02"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/holidays/zipball/c7b15481ecd230114a8c9378ba15c083187bfb02",
+                "reference": "c7b15481ecd230114a8c9378ba15c083187bfb02",
+                "shasum": ""
+            },
+            "require": {
+                "ext-calendar": "*",
+                "ext-intl": "*",
+                "nesbot/carbon": "^3.0",
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "laravel/prompts": "^0.3.0",
+                "pestphp/pest": "^4.0",
+                "phpstan/phpstan": "^2.0",
+                "rector/rector": "^2.0",
+                "spatie/invade": "^2.0",
+                "spatie/ray": "^1.40.1",
+                "symfony/var-dumper": "^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\Holidays\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Niels Vanpachtenbeke",
+                    "email": "niels@spatie.be",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Calculate public holidays",
+            "homepage": "https://github.com/spatie/holidays",
+            "keywords": [
+                "holidays",
+                "spatie"
+            ],
+            "support": {
+                "issues": "https://github.com/spatie/holidays/issues",
+                "source": "https://github.com/spatie/holidays/tree/2.0.3"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/spatie",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-04-15T11:36:44+00:00"
         },
         {
             "name": "spatie/invade",
