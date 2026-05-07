@@ -10,20 +10,20 @@
 
             {{-- Filtre par niveau (GET → query string, liens partageables) --}}
             <form method="GET" action="{{ route('agenda') }}" class="flex flex-wrap items-center gap-3">
-                <label for="level_id" class="text-sm font-medium text-gray-700">Niveau :</label>
+                <label for="level" class="text-sm font-medium text-gray-700">Niveau :</label>
 
-                <select id="level_id" name="level_id"
+                <select id="level" name="level"
                         onchange="this.form.submit()"
                         class="rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5">
                     <option value="">Tous les niveaux</option>
                     @foreach($levels as $level)
-                        <option value="{{ $level->id }}" @selected($levelId == $level->id)>
+                        <option value="{{ $level->code }}" @selected($levelCode === $level->code)>
                             {{ $level->code }} — {{ $level->name }}
                         </option>
                     @endforeach
                 </select>
 
-                @if($levelId)
+                @if($levelCode)
                     <a href="{{ route('agenda') }}"
                        class="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
                         Réinitialiser
@@ -40,7 +40,7 @@
                     </svg>
                     <p class="text-lg font-medium">Aucune session disponible</p>
                     <p class="mt-1 text-sm">
-                        @if($levelId)
+                        @if($levelCode)
                             Aucune session à venir pour ce niveau. <a href="{{ route('agenda') }}" class="text-blue-600 hover:underline">Voir tous les niveaux</a>
                         @else
                             Revenez bientôt, de nouvelles sessions sont ajoutées régulièrement.
@@ -157,6 +157,13 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+            @endif
+
+            {{-- Pagination (withQueryString() préserve ?level=A2) --}}
+            @if($tables->hasPages())
+                <div class="mt-6">
+                    {{ $tables->links() }}
                 </div>
             @endif
 
