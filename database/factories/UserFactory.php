@@ -36,7 +36,7 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function withLevel(Level $level = null): static
+    public function withLevel(?Level $level = null): static
     {
         return $this->state(function () use ($level) {
             $level ??= Level::factory()->create();
@@ -47,7 +47,7 @@ class UserFactory extends Factory
         });
     }
 
-    public function withCompany(Company $company = null): static
+    public function withCompany(?Company $company = null): static
     {
         return $this->state(function () use ($company) {
             $company ??= Company::factory()->create();
