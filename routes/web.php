@@ -4,6 +4,7 @@ use App\Http\Controllers\Member\CartesController;
 use App\Http\Controllers\Member\DashboardController;
 use App\Http\Controllers\Member\InvoiceController;
 use App\Http\Controllers\Member\ProfileController as MemberProfileController;
+use App\Http\Controllers\Member\RegistrationsController;
 use App\Http\Controllers\Payment\CheckoutController;
 use App\Http\Controllers\Payment\PaymentReturnController;
 use App\Http\Controllers\Payment\StubPaymentController;
@@ -47,6 +48,7 @@ Route::post('/webhooks/mollie', [PaymentWebhookController::class, 'mollie'])->na
 // --- Espace membre ---
 Route::prefix('espace')->name('espace.')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/inscriptions', [RegistrationsController::class, 'index'])->name('inscriptions');
     Route::get('/cartes', [CartesController::class, 'index'])->name('cartes');
     Route::get('/factures', [InvoiceController::class, 'index'])->name('factures');
     Route::get('/factures/{invoice}/pdf', [InvoiceController::class, 'download'])->name('factures.pdf');

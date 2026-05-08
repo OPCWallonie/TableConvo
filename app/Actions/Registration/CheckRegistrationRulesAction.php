@@ -35,12 +35,23 @@ class CheckRegistrationRulesAction
             return ['allowed' => false, 'reason' => 'deadline_passed'];
         }
 
+        // Doublon : vérifier EN PREMIER avant les quotas pour donner l'erreur la plus précise
+        $alreadyRegistered = $user->registrations()
+            ->where('conversation_table_id', $table->id)
+            ->whereIn('status', [RegistrationStatus::Registered->value, RegistrationStatus::Waitlist->value])
+            ->exists();
+
+        if ($alreadyRegistered) {
+            return ['allowed' => false, 'reason' => 'already_registered'];
+        }
+
         if (! $forWaitlist && $table->isFull()) {
             return ['allowed' => false, 'reason' => 'table_full'];
         }
 
-        $weekStart = now()->startOfWeek();
-        $weekEnd = now()->endOfWeek();
+        // Compte les inscriptions pour la MÊME semaine calendaire que la session cible
+        $weekStart = $table->scheduled_at->copy()->startOfWeek();
+        $weekEnd   = $table->scheduled_at->copy()->endOfWeek();
         $registrationsThisWeek = $user->registrations()
             ->whereIn('status', [RegistrationStatus::Registered->value, RegistrationStatus::Waitlist->value])
             ->whereHas('conversationTable', fn ($q) => $q->whereBetween('scheduled_at', [$weekStart, $weekEnd]))
@@ -57,15 +68,6 @@ class CheckRegistrationRulesAction
 
         if ($futureRegistrations >= $this->settings->max_future_registrations) {
             return ['allowed' => false, 'reason' => 'future_limit_reached'];
-        }
-
-        $alreadyRegistered = $user->registrations()
-            ->where('conversation_table_id', $table->id)
-            ->whereIn('status', [RegistrationStatus::Registered->value, RegistrationStatus::Waitlist->value])
-            ->exists();
-
-        if ($alreadyRegistered) {
-            return ['allowed' => false, 'reason' => 'already_registered'];
         }
 
         if (! $forWaitlist) {

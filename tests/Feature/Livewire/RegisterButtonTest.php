@@ -252,6 +252,80 @@ it('shows blocked with wrong_level when user level does not match the table', fu
         ->assertSet('errorCode', 'wrong_level');
 });
 
+// ─────────────────────────────────────────────────────────────
+// 7. Annulation depuis RegisterButton
+// ─────────────────────────────────────────────────────────────
+
+it('can cancel own registration before the cancellation deadline', function () {
+    $settings = app(BookingSettings::class);
+    $settings->cancellation_deadline_business_days = 3;
+    $settings->save();
+
+    ['user' => $user, 'card' => $card, 'table' => $table] = makeBookingSetup();
+
+    $registration = Registration::create([
+        'user_id'               => $user->id,
+        'conversation_table_id' => $table->id,
+        'card_id'               => $card->id,
+        'status'                => RegistrationStatus::Registered,
+        'registered_at'         => now(),
+    ]);
+    $card->decrement('sessions_remaining');
+    $before = $card->fresh()->sessions_remaining;
+
+    Livewire::actingAs($user)
+        ->test(RegisterButton::class, ['table' => $table])
+        ->assertSet('status', 'registered')
+        ->call('cancel')
+        ->assertSet('status', 'can_register')
+        ->assertSet('flashMessage', "Votre inscription a été annulée.");
+
+    expect($registration->fresh()->status)->toBe(RegistrationStatus::Cancelled);
+    expect($card->fresh()->sessions_remaining)->toBe($before + 1);
+});
+
+it('cannot cancel after the cancellation deadline as a regular user', function () {
+    $settings = app(BookingSettings::class);
+    $settings->cancellation_deadline_business_days = 3;
+    $settings->save();
+
+    // Table dans 1 jour → deadline (J-3 jours ouvrables) déjà dépassée
+    ['level' => $level] = makeBookingSetup();
+    $user  = User::factory()->withLevel($level)->create();
+    $order = Order::factory()->create(['user_id' => $user->id]);
+    $card  = Card::factory()->create([
+        'user_id'            => $user->id,
+        'order_id'           => $order->id,
+        'sessions_remaining' => 5,
+        'status'             => CardStatus::Active,
+        'expires_at'         => now()->addMonths(6),
+    ]);
+    $table = ConversationTable::factory()->create([
+        'level_id'         => $level->id,
+        'status'           => SessionStatus::Scheduled,
+        'scheduled_at'     => now()->addDay(),
+        'max_participants' => 8,
+    ]);
+    Registration::create([
+        'user_id'               => $user->id,
+        'conversation_table_id' => $table->id,
+        'card_id'               => $card->id,
+        'status'                => RegistrationStatus::Registered,
+        'registered_at'         => now()->subDay(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(RegisterButton::class, ['table' => $table])
+        ->assertSet('status', 'registered')
+        ->call('cancel')
+        ->assertSet('status', 'registered')      // reste inscrit
+        ->assertSet('errorCode', 'deadline_passed');
+});
+
+// ─────────────────────────────────────────────────────────────
+// 8. États blocked — mauvais niveau, pas de carte
+// ─────────────────────────────────────────────────────────────
+
 it('shows blocked with no_active_card when user has no card with remaining sessions', function () {
     $settings = app(BookingSettings::class);
     $settings->registration_deadline_hours = 24;

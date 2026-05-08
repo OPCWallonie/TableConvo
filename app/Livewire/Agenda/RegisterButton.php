@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Agenda;
 
+use App\Actions\Registration\CancelRegistrationAction;
 use App\Actions\Registration\CheckRegistrationRulesAction;
 use App\Actions\Registration\RegisterUserToTableAction;
 use App\Actions\User\RequestLevelInterviewAction;
@@ -26,7 +27,7 @@ class RegisterButton extends Component
         'session_not_available' => "Cette session n'est plus disponible.",
         'no_level'              => "Votre niveau n'a pas encore été déterminé. Un administrateur va vous contacter pour planifier un entretien téléphonique.",
         'wrong_level'           => "Cette table n'est pas ouverte à votre niveau de langue.",
-        'deadline_passed'       => "Le délai d'inscription est dépassé.",
+        'deadline_passed'       => "Le délai pour cette action est dépassé.",
         'table_full'            => "Cette session est complète.",
         'weekly_limit_reached'  => "Vous avez atteint le nombre maximum d'inscriptions pour cette semaine.",
         'future_limit_reached'  => "Vous avez trop d'inscriptions futures simultanées.",
@@ -64,6 +65,32 @@ class RegisterButton extends Component
         try {
             app(RegisterUserToTableAction::class)->execute($user, $this->table);
             $this->flashMessage = "Votre inscription est confirmée !";
+            $this->errorCode    = null;
+            $this->computeStatus();
+        } catch (RuntimeException $e) {
+            $this->computeStatus();
+            $this->errorCode    = $e->getMessage();
+            $this->flashMessage = null;
+        }
+    }
+
+    public function cancel(): void
+    {
+        if (! auth()->check()) {
+            $this->redirectRoute('login');
+            return;
+        }
+
+        $user = auth()->user();
+
+        $registration = Registration::where('user_id', $user->id)
+            ->where('conversation_table_id', $this->table->id)
+            ->whereIn('status', [RegistrationStatus::Registered->value, RegistrationStatus::Waitlist->value])
+            ->firstOrFail();
+
+        try {
+            app(CancelRegistrationAction::class)->execute($registration, $user);
+            $this->flashMessage = "Votre inscription a été annulée.";
             $this->errorCode    = null;
             $this->computeStatus();
         } catch (RuntimeException $e) {

@@ -19,8 +19,14 @@
                         Tarifs
                     </x-nav-link>
                     @auth
-                    <x-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.*')">
-                        Mon espace
+                    <x-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.dashboard')">
+                        Tableau de bord
+                    </x-nav-link>
+                    <x-nav-link :href="route('espace.inscriptions')" :active="request()->routeIs('espace.inscriptions')">
+                        Mes inscriptions
+                    </x-nav-link>
+                    <x-nav-link :href="route('espace.cartes')" :active="request()->routeIs('espace.cartes')">
+                        Mes cartes
                     </x-nav-link>
                     @endauth
                 </div>
@@ -85,8 +91,14 @@
                 Tarifs
             </x-responsive-nav-link>
             @auth
-            <x-responsive-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.*')">
-                Mon espace
+            <x-responsive-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.dashboard')">
+                Tableau de bord
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('espace.inscriptions')" :active="request()->routeIs('espace.inscriptions')">
+                Mes inscriptions
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('espace.cartes')" :active="request()->routeIs('espace.cartes')">
+                Mes cartes
             </x-responsive-nav-link>
             @endauth
         </div>

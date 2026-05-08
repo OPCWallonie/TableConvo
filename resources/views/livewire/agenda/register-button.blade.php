@@ -26,23 +26,41 @@
             @break
 
         @case('registered')
-            <div class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Vous êtes inscrit
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Vous êtes inscrit
+                </div>
+                <button wire:click="cancel"
+                        wire:loading.attr="disabled"
+                        wire:confirm="Annuler votre inscription ? Cette action est irréversible si le délai est passé."
+                        class="w-full px-4 py-2 rounded-lg text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors">
+                    <span wire:loading.remove wire:target="cancel">Annuler mon inscription</span>
+                    <span wire:loading wire:target="cancel">Annulation…</span>
+                </button>
             </div>
             @break
 
         @case('waitlisted')
-            <div class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-medium">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                En liste d'attente
-                @if($waitlistPosition)
-                    (position #{{ $waitlistPosition }})
-                @endif
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-medium">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    En liste d'attente
+                    @if($waitlistPosition)
+                        (position #{{ $waitlistPosition }})
+                    @endif
+                </div>
+                <button wire:click="cancel"
+                        wire:loading.attr="disabled"
+                        wire:confirm="Quitter la liste d'attente ?"
+                        class="w-full px-4 py-2 rounded-lg text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors">
+                    <span wire:loading.remove wire:target="cancel">Quitter la liste d'attente</span>
+                    <span wire:loading wire:target="cancel">Annulation…</span>
+                </button>
             </div>
             @break
 
