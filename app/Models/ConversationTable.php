@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,12 +51,12 @@ class ConversationTable extends Model
 
     public function confirmedRegistrations(): HasMany
     {
-        return $this->registrations()->where('status', 'registered');
+        return $this->registrations()->where('status', RegistrationStatus::Registered->value);
     }
 
     public function waitlist(): HasMany
     {
-        return $this->registrations()->where('status', 'waitlist')->orderBy('waitlist_position');
+        return $this->registrations()->where('status', RegistrationStatus::Waitlist->value)->orderBy('waitlist_position');
     }
 
     public function isFull(): bool

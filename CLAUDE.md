@@ -84,7 +84,7 @@ composer require spatie/laravel-settings
 composer require spatie/laravel-activitylog
 composer require mollie/laravel-mollie
 composer require barryvdh/laravel-dompdf
-composer require cmixin/business-time
+composer require spatie/holidays
 composer require --dev pestphp/pest pestphp/pest-plugin-laravel
 ```
 

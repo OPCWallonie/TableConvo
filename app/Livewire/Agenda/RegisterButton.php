@@ -24,17 +24,18 @@ class RegisterButton extends Component
     public ?int     $waitlistPosition = null;
 
     private const ERROR_MESSAGES = [
-        'session_not_available' => "Cette session n'est plus disponible.",
-        'no_level'              => "Votre niveau n'a pas encore été déterminé. Un administrateur va vous contacter pour planifier un entretien téléphonique.",
-        'wrong_level'           => "Cette table n'est pas ouverte à votre niveau de langue.",
-        'deadline_passed'       => "Le délai pour cette action est dépassé.",
-        'table_full'            => "Cette session est complète.",
-        'weekly_limit_reached'  => "Vous avez atteint le nombre maximum d'inscriptions pour cette semaine.",
-        'future_limit_reached'  => "Vous avez trop d'inscriptions futures simultanées.",
-        'already_registered'    => "Vous êtes déjà inscrit à cette session.",
-        'no_active_card'        => "Vous n'avez pas de carte active avec des sessions disponibles.",
-        'cannot_cancel'         => "Cette inscription ne peut pas être annulée.",
-        'session_unavailable'   => "Cette session n'est plus disponible.",
+        'session_not_open_for_registration' => "Cette session n'est pas ouverte aux inscriptions.",
+        'session_already_passed'            => "Cette session est déjà passée.",
+        'no_level'                          => "Votre niveau n'a pas encore été déterminé. Un administrateur va vous contacter pour planifier un entretien téléphonique.",
+        'wrong_level'                       => "Cette table n'est pas ouverte à votre niveau de langue.",
+        'deadline_passed'                   => "Le délai pour cette action est dépassé.",
+        'table_full'                        => "Cette session est complète.",
+        'weekly_limit_reached'              => "Vous avez atteint le nombre maximum d'inscriptions pour cette semaine.",
+        'future_limit_reached'              => "Vous avez trop d'inscriptions futures simultanées.",
+        'already_registered'                => "Vous êtes déjà inscrit à cette session.",
+        'no_active_card'                    => "Vous n'avez pas de carte active avec des sessions disponibles.",
+        'cannot_cancel'                     => "Cette inscription ne peut pas être annulée.",
+        'session_unavailable'               => "Cette session n'est plus disponible.",
     ];
 
     public function mount(): void

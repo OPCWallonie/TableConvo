@@ -62,7 +62,7 @@ it('blocks when session is cancelled', function () {
     $table->update(['status' => SessionStatus::Cancelled]);
 
     expect(fn () => app(RegisterUserToTableAction::class)->execute($user, $table))
-        ->toThrow(RuntimeException::class, 'session_not_available');
+        ->toThrow(RuntimeException::class, 'session_not_open_for_registration');
 });
 
 it('blocks when user has no level', function () {

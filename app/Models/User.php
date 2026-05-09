@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CardStatus;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
@@ -86,7 +87,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function activeCards(): HasMany
     {
-        return $this->cards()->where('status', 'active')->where('expires_at', '>', now());
+        return $this->cards()->where('status', CardStatus::Active->value)->where('expires_at', '>', now());
     }
 
     public function canAccessPanel(Panel $panel): bool

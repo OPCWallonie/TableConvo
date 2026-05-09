@@ -19,7 +19,11 @@ class CheckRegistrationRulesAction
     public function execute(User $user, ConversationTable $table, bool $forWaitlist = false): array
     {
         if ($table->status !== SessionStatus::Scheduled) {
-            return ['allowed' => false, 'reason' => 'session_not_available'];
+            return ['allowed' => false, 'reason' => 'session_not_open_for_registration'];
+        }
+
+        if ($table->scheduled_at->isPast()) {
+            return ['allowed' => false, 'reason' => 'session_already_passed'];
         }
 
         if (! $user->hasLevel()) {
