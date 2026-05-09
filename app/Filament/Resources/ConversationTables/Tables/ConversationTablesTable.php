@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ConversationTables\Tables;
 
+use App\Actions\Session\CancelSessionAction;
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
 use App\Models\ConversationTable;
@@ -11,6 +12,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -103,11 +105,35 @@ class ConversationTablesTable
                     ->modalContent(
                         fn (ConversationTable $record) => view(
                             'filament.modals.registrations-list',
-                            ['registrations' => $record->registrations()->with('user')->get()]
+                            ['table' => $record]
                         )
                     )
+                    ->modalWidth('2xl')
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Fermer'),
+
+                Action::make('cancel_session')
+                    ->label('Annuler')
+                    ->icon(Heroicon::OutlinedXCircle)
+                    ->color('danger')
+                    ->modalHeading(fn (ConversationTable $record) =>
+                        'Annuler la session du ' . $record->scheduled_at->format('d/m/Y') . ' ?'
+                    )
+                    ->modalDescription('Cette action est irréversible. Tous les inscrits seront notifiés et leurs séances recréditées si applicable.')
+                    ->form([
+                        Textarea::make('reason')
+                            ->label("Raison de l'annulation")
+                            ->required()
+                            ->rows(3)
+                            ->maxLength(500),
+                    ])
+                    ->action(function (ConversationTable $record, array $data): void {
+                        app(CancelSessionAction::class)->execute($record, auth()->user(), $data['reason']);
+                    })
+                    ->successNotificationTitle('Session annulée avec succès')
+                    ->visible(fn (ConversationTable $record): bool =>
+                        $record->status === SessionStatus::Scheduled && $record->scheduled_at->isFuture()
+                    ),
 
                 EditAction::make(),
                 DeleteAction::make(),
