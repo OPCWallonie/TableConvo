@@ -94,10 +94,9 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::logout();
+        $anonymize->execute($user, performedBy: $user);
 
-        $anonymize->execute($user);
-        $user->delete();
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

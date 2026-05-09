@@ -81,8 +81,8 @@ test('user account is anonymized on deletion', function () {
 
     $deleted = User::withTrashed()->find($userId);
     $this->assertSame('Compte', $deleted->first_name);
-    $this->assertSame('supprimé', $deleted->last_name);
-    $this->assertSame("deleted-{$userId}@deleted.local", $deleted->email);
+    $this->assertSame('Supprimé', $deleted->last_name);
+    $this->assertSame("anonymized-{$userId}@anonymized.local", $deleted->email);
     $this->assertNull($deleted->phone);
 });
 
