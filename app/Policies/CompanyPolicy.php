@@ -14,7 +14,7 @@ class CompanyPolicy
 
     public function view(User $user, Company $company): bool
     {
-        return $user->hasRole('admin');
+        return $user->company_id === $company->id || $user->hasRole('admin');
     }
 
     public function create(User $user): bool
@@ -24,10 +24,15 @@ class CompanyPolicy
 
     public function update(User $user, Company $company): bool
     {
-        return $user->hasRole('admin');
+        return $user->company_id === $company->id || $user->hasRole('admin');
     }
 
     public function delete(User $user, Company $company): bool
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function manageMembers(User $user, Company $company): bool
     {
         return $user->hasRole('admin');
     }

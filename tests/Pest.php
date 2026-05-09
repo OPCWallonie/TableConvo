@@ -16,6 +16,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => \Illuminate\Support\Facades\Cache::flush())
     ->in('Feature');
 
 /*
@@ -44,7 +45,27 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function mockVat(string $normalized = 'BE0123456789'): void
 {
-    // ..
+    test()->mock(\App\Services\Vat\VatValidationService::class, function ($mock) use ($normalized) {
+        $mock->shouldReceive('normalize')->andReturn($normalized);
+        $mock->shouldReceive('isFormatValid')->andReturn(true);
+        $mock->shouldReceive('validate')->andReturn(true);
+    });
+}
+
+function registrationPayload(array $overrides = []): array
+{
+    return array_merge([
+        'first_name'            => 'Test',
+        'last_name'             => 'User',
+        'email'                 => 'test@example.com',
+        'password'              => 'password',
+        'password_confirmation' => 'password',
+        'company_name'          => 'Acme SA',
+        'vat_number'            => 'BE0123456789',
+        'street'                => 'Rue de la Paix 1',
+        'postal_code'           => '1000',
+        'city'                  => 'Bruxelles',
+    ], $overrides);
 }

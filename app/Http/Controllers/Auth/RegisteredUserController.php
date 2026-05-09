@@ -56,6 +56,10 @@ class RegisteredUserController extends Controller
         }
 
         if (Company::where('vat_number', $vatNormalized)->exists()) {
+            activity()
+                ->withProperties(['vat_number' => $vatNormalized, 'ip' => $request->ip(), 'email' => $request->email])
+                ->log('Tentative d\'inscription avec numéro de TVA déjà enregistré');
+
             throw ValidationException::withMessages([
                 'vat_number' => 'Une société est déjà enregistrée avec ce numéro de TVA. Pour rejoindre cette société, demandez à un administrateur de vous inviter, ou contactez-nous.',
             ]);
