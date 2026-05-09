@@ -9,8 +9,18 @@ class ExpireCardAction
 {
     public function execute(): int
     {
-        return Card::where('status', CardStatus::Active)
-            ->where('expires_at', '<=', now())
-            ->update(['status' => CardStatus::Expired]);
+        $cards = Card::where('status', CardStatus::Active->value)
+            ->where('expires_at', '<', now())
+            ->get();
+
+        foreach ($cards as $card) {
+            $card->update(['status' => CardStatus::Expired]);
+
+            activity()
+                ->performedOn($card)
+                ->log('Carte expirée automatiquement');
+        }
+
+        return $cards->count();
     }
 }

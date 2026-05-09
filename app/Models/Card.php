@@ -23,13 +23,15 @@ class Card extends Model
         'purchased_at',
         'expires_at',
         'status',
+        'reminders_sent',
     ];
 
     protected $casts = [
-        'status' => CardStatus::class,
-        'price_paid' => 'decimal:2',
-        'purchased_at' => 'datetime',
-        'expires_at' => 'datetime',
+        'status'          => CardStatus::class,
+        'price_paid'      => 'decimal:2',
+        'purchased_at'    => 'datetime',
+        'expires_at'      => 'datetime',
+        'reminders_sent'  => 'array',
     ];
 
     public function user(): BelongsTo
