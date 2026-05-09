@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('cards:expire')->dailyAt('03:00');
+        $schedule->command('attendance:mark-no-shows')->dailyAt('04:00');
         $schedule->command('cards:warn-expiration')->dailyAt('09:00');
     })
     ->create();

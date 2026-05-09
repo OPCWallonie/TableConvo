@@ -100,6 +100,17 @@ class ManageBookingSettings extends Page
                             ->label('Promotion automatique depuis la liste d\'attente')
                             ->helperText('Désactivé par défaut. Si activé, le premier de la liste est inscrit automatiquement lors d\'une libération de place.'),
                     ]),
+
+                Section::make('Présences et clôture automatique')
+                    ->schema([
+                        TextInput::make('auto_mark_noshow_after_days')
+                            ->label('Délai avant marquage automatique des absences (jours)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(7)
+                            ->suffix('j')
+                            ->helperText('Au bout de combien de jours après une session non saisie les inscrits sont automatiquement marqués absents. Par défaut : 7 jours.'),
+                    ]),
             ]);
     }
 

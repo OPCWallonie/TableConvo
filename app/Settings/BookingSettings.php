@@ -12,7 +12,8 @@ class BookingSettings extends Settings
     public int $max_future_registrations = 3;
     public int $post_cancellation_card_extension_days = 30;
     public int $post_cancellation_extension_threshold_days = 30;
-    public bool $waitlist_auto_promote = false;
+    public bool $waitlist_auto_promote = true;
+    public int $auto_mark_noshow_after_days = 7;
 
     public static function group(): string
     {

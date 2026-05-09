@@ -112,6 +112,24 @@ class ConversationTablesTable
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Fermer'),
 
+                Action::make('mark_attendance')
+                    ->label('Présences')
+                    ->icon(Heroicon::OutlinedClipboardDocumentCheck)
+                    ->color('success')
+                    ->modalHeading(fn (ConversationTable $record) =>
+                        'Présences — ' . $record->topic . ' (' . $record->scheduled_at->format('d/m/Y') . ')'
+                    )
+                    ->modalContent(fn (ConversationTable $record) => view(
+                        'filament.modals.attendance-manager',
+                        ['table' => $record]
+                    ))
+                    ->modalWidth('lg')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Fermer')
+                    ->visible(fn (ConversationTable $record): bool =>
+                        $record->status === SessionStatus::Scheduled && $record->scheduled_at->isPast()
+                    ),
+
                 Action::make('cancel_session')
                     ->label('Annuler')
                     ->icon(Heroicon::OutlinedXCircle)
