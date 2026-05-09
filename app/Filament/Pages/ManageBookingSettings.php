@@ -111,6 +111,17 @@ class ManageBookingSettings extends Page
                             ->suffix('j')
                             ->helperText('Au bout de combien de jours après une session non saisie les inscrits sont automatiquement marqués absents. Par défaut : 7 jours.'),
                     ]),
+
+                Section::make('Rappels de session')
+                    ->schema([
+                        TextInput::make('session_reminder_hours_before')
+                            ->label('Délai d\'envoi du rappel avant la session (heures)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(24)
+                            ->suffix('h')
+                            ->helperText('Combien d\'heures avant la session le rappel est envoyé à chaque inscrit. Par défaut : 24h (veille de la session).'),
+                    ]),
             ]);
     }
 

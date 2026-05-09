@@ -14,6 +14,7 @@ class BookingSettings extends Settings
     public int $post_cancellation_extension_threshold_days = 30;
     public bool $waitlist_auto_promote = true;
     public int $auto_mark_noshow_after_days = 7;
+    public int $session_reminder_hours_before = 24;
 
     public static function group(): string
     {

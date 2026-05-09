@@ -21,12 +21,14 @@ class Registration extends Model
         'registered_at',
         'cancelled_at',
         'cancelled_by',
+        'reminded_at',
     ];
 
     protected $casts = [
-        'status' => RegistrationStatus::class,
+        'status'        => RegistrationStatus::class,
         'registered_at' => 'datetime',
-        'cancelled_at' => 'datetime',
+        'cancelled_at'  => 'datetime',
+        'reminded_at'   => 'datetime',
     ];
 
     public function user(): BelongsTo
