@@ -10,6 +10,7 @@ use App\Http\Controllers\Payment\PaymentReturnController;
 use App\Http\Controllers\Payment\StubPaymentController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\Public\AgendaController;
+use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\ShopController;
@@ -17,7 +18,7 @@ use App\Http\Controllers\Public\TableController;
 use Illuminate\Support\Facades\Route;
 
 // --- Pages publiques ---
-Route::get('/', fn () => view('welcome'));
+Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
 Route::get('/tables/{table}', [TableController::class, 'show'])->name('tables.show');
 Route::get('/tarifs', [PricingController::class, 'index'])->name('tarifs');
@@ -31,7 +32,7 @@ Route::get('/achat/{cardType}', [ShopController::class, 'show'])->name('achat.sh
 // --- Panier & checkout (auth requis) ---
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/panier', fn () => view('public.panier'))->name('panier');
-    Route::post('/panier/checkout', [CheckoutController::class, 'store'])->name('panier.checkout');
+    Route::post('/panier/checkout', [CheckoutController::class, 'store'])->name('panier.checkout')->middleware('throttle:checkout');
 });
 
 // --- Retour paiement (auth requis) ---
@@ -55,7 +56,7 @@ Route::prefix('espace')->name('espace.')->middleware(['auth', 'verified'])->grou
     Route::get('/profil', [MemberProfileController::class, 'show'])->name('profil');
     Route::patch('/profil', [MemberProfileController::class, 'update'])->name('profil.update');
     Route::get('/donnees', [MemberProfileController::class, 'exportData'])->name('donnees');
-    Route::delete('/compte', [MemberProfileController::class, 'destroy'])->name('compte.destroy');
+    Route::delete('/compte', [MemberProfileController::class, 'destroy'])->name('compte.destroy')->middleware('throttle:account-deletion');
 });
 
 // Compat dashboard
