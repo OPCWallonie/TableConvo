@@ -488,12 +488,26 @@ $schedule->command('app:mark-no-shows')->dailyAt('23:59');
 3. MarkNoShowsCommand
 4. Tous les rappels automatisés
 
-### Phase 7 — Stats, audit, finitions
-1. Widgets Filament (taux remplissage, revenus, no-show, etc.)
-2. Activity Log intégré
-3. Export RGPD
-4. CSP, sécurité, rate limiting
-5. Tests Pest complets
+### Phase 7 — Stats, audit, finitions ✅ TERMINÉE (2026-05-10)
+1. Widgets Filament (taux remplissage, revenus, no-show, etc.) ✅
+2. Activity Log intégré (ActivityLogResource + RelationManagers User/Card) ✅
+3. Apparence/theming (ThemeSettings, 4 designs cartes, CSS variables, WCAG) ✅
+4. CSP Spatie v3, rate limiting (login/checkout/account-deletion) ✅
+5. Tests Pest complets — 320 tests verts ✅
+
+**Non implémenté en Phase 7 (backlog Phase 8)** :
+- 2FA admin (Filament 5 sans natif, estimation > 2h)
+
+---
+
+### Phase 8 — Déploiement (à venir)
+
+1. Configuration serveur production (HTTPS, TrustProxies, env prod)
+2. 2FA pour les admins (`DanHarrin/filament-two-factor-authentication` ou équivalent)
+3. `php artisan storage:link` + S3/bucket pour PDF factures
+4. Mise en place monitoring (Sentry ou equivalent)
+5. Tests de charge minimal (checkout, webhooks Mollie)
+6. Sauvegarde automatique (`spatie/laravel-backup`)
 
 ---
 

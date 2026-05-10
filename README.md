@@ -1,58 +1,57 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# TableConvo — Plateforme de gestion de tables de conversation
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plateforme B2B de gestion de tables de conversation en néerlandais. Les entreprises achètent des cartes virtuelles de sessions que leurs employés utilisent pour s'inscrire aux tables.
 
-## About Laravel
+**Stack** : Laravel 13 · Filament 5 · Livewire 4 · Tailwind CSS · MySQL 8 · Pest
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Phases d'implémentation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Phase | Description | Statut |
+|-------|-------------|--------|
+| 1 | Fondations : migrations, models, enums, seeders | ✅ Terminée |
+| 2 | Auth, inscription société, espace membre, Filament User/Company | ✅ Terminée |
+| 3 | Catalogue cartes, achat, Mollie, factures PDF | ✅ Terminée |
+| 4 | Tables de conversation, agenda, inscriptions, BusinessDayService | ✅ Terminée |
+| 5 | Liste d'attente, déplacement d'inscriptions admin | ✅ Terminée |
+| 6 | Annulation sessions admin, expiration cartes, rappels automatisés | ✅ Terminée |
+| 7 | Widgets stats, Activity Log, theming, CSP, rate limiting, tests | ✅ Terminée |
+| 8 | Déploiement, 2FA admin, monitoring | 🔜 À venir |
 
-## Learning Laravel
+Briefs de phase détaillés dans `docs/` : `PHASE_3_BRIEF.md` … `PHASE_7_BRIEF.md`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Pré-requis
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- PHP 8.4+ (composer.json enforce `>=8.4`)
+- MySQL 8 ou MariaDB 10.11+
+- Node.js 20+ pour Vite/Tailwind
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation locale (MAMP)
 
 ```bash
-composer require laravel/boost --dev
+cp .env.example .env
+# éditer .env : DB_HOST=127.0.0.1, DB_PORT=8889, DB_DATABASE=tableconvo
 
-php artisan boost:install
+composer install
+php artisan key:generate
+php artisan migrate --seed
+npm install && npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Tests
 
-## Contributing
+```bash
+php -d memory_limit=512M vendor/bin/pest --no-coverage
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+320 tests · couverture Actions métier 100% · intégration flux critiques incluse.
 
-## Code of Conduct
+## Sécurité
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- CSP via `spatie/laravel-csp` (`AppCspPreset`) sur web + panel Filament
+- Rate limiting : login (5/min), register (5/10min), checkout (10/min), account-deletion (3/min)
+- Webhook Mollie : CSRF exempt + idempotence garantie
+- Soft deletes partout — aucune suppression physique des données métier
