@@ -13,8 +13,8 @@ class AppCspPreset implements Preset
     {
         $policy
             ->add(Directive::DEFAULT, Keyword::SELF)
-            ->add(Directive::SCRIPT, [Keyword::SELF, Keyword::UNSAFE_INLINE])
-            ->add(Directive::STYLE, [Keyword::SELF, Keyword::UNSAFE_INLINE])
+            ->add(Directive::SCRIPT, [Keyword::SELF, Keyword::UNSAFE_INLINE, Keyword::UNSAFE_EVAL])
+            ->add(Directive::STYLE, [Keyword::SELF, Keyword::UNSAFE_INLINE, 'https://fonts.bunny.net'])
             ->add(Directive::IMG, [Keyword::SELF, 'data:'])
             ->add(Directive::FONT, [Keyword::SELF, 'https://fonts.bunny.net'])
             ->add(Directive::CONNECT, Keyword::SELF)

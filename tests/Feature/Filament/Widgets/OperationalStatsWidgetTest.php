@@ -27,6 +27,10 @@ function makeOperationalWidget(): OperationalStatsWidget
 }
 
 it('displays correct count of upcoming sessions this week', function () {
+    // Freeze to Tuesday 09:00 so that +4h is always within the current week,
+    // regardless of when the test suite runs (fixes Sunday-night flakiness).
+    $this->travelTo(now()->startOfWeek()->addDay()->setHour(9));
+
     ConversationTable::factory()->create([
         'status'       => SessionStatus::Scheduled,
         'scheduled_at' => now()->addHours(4),

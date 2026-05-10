@@ -53,7 +53,6 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \Spatie\Csp\AddCspHeaders::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
