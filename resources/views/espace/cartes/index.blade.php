@@ -15,8 +15,8 @@
             @endif
 
             @php
-                $cards = auth()->user()->cards()->with('cardType')->latest()->get();
-                $active = $cards->where('status', \App\Enums\CardStatus::Active);
+                $cards   = auth()->user()->cards()->with('cardType')->latest()->get();
+                $active  = $cards->where('status', \App\Enums\CardStatus::Active);
                 $expired = $cards->where('status', \App\Enums\CardStatus::Expired);
             @endphp
 
@@ -32,30 +32,7 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Cartes actives</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                         @foreach($active as $card)
-                            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                                <div class="flex justify-between items-start mb-3">
-                                    <span class="font-semibold text-gray-900">{{ $card->cardType->name }}</span>
-                                    <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Active</span>
-                                </div>
-                                <div class="space-y-1 text-sm text-gray-600">
-                                    <div class="flex justify-between">
-                                        <span>Sessions restantes</span>
-                                        <span class="font-bold text-blue-700">{{ $card->sessions_remaining }} / {{ $card->sessions_total }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Expire le</span>
-                                        <span class="{{ $card->expires_at->diffInDays() <= 30 ? 'text-amber-600 font-medium' : '' }}">
-                                            {{ $card->expires_at->format('d/m/Y') }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="mt-3">
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-blue-600 h-2 rounded-full"
-                                             style="width: {{ $card->sessions_total > 0 ? round($card->sessions_remaining / $card->sessions_total * 100) : 0 }}%"></div>
-                                    </div>
-                                </div>
-                            </div>
+                            <x-card-display :card="$card" />
                         @endforeach
                     </div>
                 @endif
@@ -64,10 +41,7 @@
                     <h3 class="text-lg font-semibold text-gray-500 mb-4">Historique</h3>
                     <div class="space-y-2">
                         @foreach($expired as $card)
-                            <div class="bg-gray-50 rounded-lg border border-gray-200 px-5 py-3 flex justify-between items-center text-sm text-gray-500">
-                                <span>{{ $card->cardType->name }}</span>
-                                <span>Expirée le {{ $card->expires_at->format('d/m/Y') }}</span>
-                            </div>
+                            <x-card-display :card="$card" />
                         @endforeach
                     </div>
                 @endif

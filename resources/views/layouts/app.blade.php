@@ -13,6 +13,16 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <!-- Theme CSS variables (front public + espace membre only) -->
+        @php $theme = app(\App\Settings\ThemeSettings::class); @endphp
+        <style>
+            :root {
+                --color-primary: {{ $theme->color_primary }};
+                --color-accent: {{ $theme->color_accent }};
+                --color-surface: {{ $theme->color_surface }};
+            }
+        </style>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
