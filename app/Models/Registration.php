@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RegistrationStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -65,5 +66,10 @@ class Registration extends Model
     {
         return $query->whereHas('conversationTable', fn ($q) => $q->where('scheduled_at', '>', now()))
             ->whereIn('status', [RegistrationStatus::Registered->value, RegistrationStatus::Waitlist->value]);
+    }
+
+    public function getPositionAttribute(): int
+    {
+        return (int) $this->waitlist_position;
     }
 }
