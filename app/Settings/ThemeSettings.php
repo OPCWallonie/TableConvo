@@ -12,7 +12,7 @@ class ThemeSettings extends Settings
 
     public string $color_surface = '#f3f4f6';
 
-    public string $card_design = 'stamp';
+    public string $card_design = 'wallet';
 
     public static function group(): string
     {
