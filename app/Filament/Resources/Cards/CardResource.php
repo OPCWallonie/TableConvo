@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class CardResource extends Resource
@@ -89,6 +90,14 @@ class CardResource extends Resource
                     ->dateTime('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->label('Statut')
+                    ->options(
+                        collect(CardStatus::cases())
+                            ->mapWithKeys(fn (CardStatus $s) => [$s->value => $s->label()])
+                    ),
             ])
             ->defaultSort('purchased_at', 'desc');
     }

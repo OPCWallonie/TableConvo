@@ -16,6 +16,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -92,6 +93,13 @@ class ConversationTablesTable
                         'past'     => $query->where('scheduled_at', '<', now()),
                         default    => $query,
                     }),
+
+                Filter::make('current_week')
+                    ->label('Cette semaine')
+                    ->query(fn (Builder $query) => $query->whereBetween('scheduled_at', [
+                        now()->startOfWeek(),
+                        now()->endOfWeek(),
+                    ])),
             ])
             ->recordActions([
                 Action::make('voir_inscrits')

@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
+use App\Filament\Resources\ConversationTables\ConversationTableResource;
 use App\Models\ConversationTable;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
 class SessionFillRateChartWidget extends ChartWidget
 {
     protected ?string $heading = 'Taux de remplissage (12 semaines)';
+
+    protected string $view = 'filament.widgets.session-fill-rate-chart-with-link';
 
     protected static ?int $sort = 2;
 
@@ -22,6 +25,16 @@ class SessionFillRateChartWidget extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
+    }
+
+    public function getDrillDownUrl(): string
+    {
+        return ConversationTableResource::getUrl('index') . '?' . http_build_query([
+            'tableFilters' => [
+                'status' => ['value' => 'completed'],
+                'period' => ['value' => 'past'],
+            ],
+        ]);
     }
 
     protected function getData(): array

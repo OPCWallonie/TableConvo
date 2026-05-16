@@ -6,6 +6,8 @@ use App\Enums\CardStatus;
 use App\Enums\OrderStatus;
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
+use App\Filament\Resources\Cards\CardResource;
+use App\Filament\Resources\ConversationTables\ConversationTableResource;
 use App\Models\Card;
 use App\Models\ConversationTable;
 use App\Models\Order;
@@ -44,7 +46,10 @@ class OperationalStatsWidget extends StatsOverviewWidget
             Stat::make('Sessions cette semaine', $upcomingSessions)
                 ->description('Sessions planifiées à venir cette semaine')
                 ->icon(Heroicon::OutlinedCalendarDays)
-                ->color('primary'),
+                ->color('primary')
+                ->url(ConversationTableResource::getUrl('index') . '?' . http_build_query([
+                    'tableFilters' => ['current_week' => ['isActive' => '1']],
+                ])),
 
             Stat::make('Inscriptions en cours', $activeRegistrations)
                 ->description('Inscrits confirmés, sessions à venir')
@@ -54,7 +59,10 @@ class OperationalStatsWidget extends StatsOverviewWidget
             Stat::make('Cartes actives', $activeCards)
                 ->description('Cartes avec des sessions disponibles')
                 ->icon(Heroicon::OutlinedCreditCard)
-                ->color('info'),
+                ->color('info')
+                ->url(CardResource::getUrl('index') . '?' . http_build_query([
+                    'tableFilters' => ['status' => ['value' => CardStatus::Active->value]],
+                ])),
 
             Stat::make('Revenus du mois (HT)', number_format((float) $monthlyRevenue, 2, ',', ' ') . ' €')
                 ->description('Commandes payées ce mois-ci')
