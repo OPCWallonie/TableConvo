@@ -30,7 +30,7 @@ class SessionFillRateChartWidget extends ChartWidget
     public function getDrillDownUrl(): string
     {
         return ConversationTableResource::getUrl('index') . '?' . http_build_query([
-            'tableFilters' => [
+            'filters' => [
                 'status' => ['value' => 'completed'],
                 'period' => ['value' => 'past'],
             ],

@@ -48,7 +48,7 @@ class OperationalStatsWidget extends StatsOverviewWidget
                 ->icon(Heroicon::OutlinedCalendarDays)
                 ->color('primary')
                 ->url(ConversationTableResource::getUrl('index') . '?' . http_build_query([
-                    'tableFilters' => ['current_week' => ['isActive' => '1']],
+                    'filters' => ['current_week' => ['isActive' => '1']],
                 ])),
 
             Stat::make('Inscriptions en cours', $activeRegistrations)
@@ -61,7 +61,7 @@ class OperationalStatsWidget extends StatsOverviewWidget
                 ->icon(Heroicon::OutlinedCreditCard)
                 ->color('info')
                 ->url(CardResource::getUrl('index') . '?' . http_build_query([
-                    'tableFilters' => ['status' => ['value' => CardStatus::Active->value]],
+                    'filters' => ['status' => ['value' => CardStatus::Active->value]],
                 ])),
 
             Stat::make('Revenus du mois (HT)', number_format((float) $monthlyRevenue, 2, ',', ' ') . ' €')
