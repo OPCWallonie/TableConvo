@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\OrderStatus;
+use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Cache;
 class RevenueChartWidget extends ChartWidget
 {
     protected ?string $heading = 'Revenus HT (12 mois)';
+
+    protected string $view = 'filament.widgets.revenue-chart-with-link';
 
     protected static ?int $sort = 4;
 
@@ -21,6 +24,16 @@ class RevenueChartWidget extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    public function getDrillDownUrl(): string
+    {
+        return OrderResource::getUrl('index') . '?' . http_build_query([
+            'filters' => [
+                'status'         => ['value' => 'paid'],
+                'last_12_months' => ['isActive' => '1'],
+            ],
+        ]);
     }
 
     protected function getData(): array

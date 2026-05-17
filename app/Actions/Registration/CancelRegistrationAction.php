@@ -5,8 +5,10 @@ namespace App\Actions\Registration;
 use App\Enums\CardStatus;
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
+use App\Events\RegistrationCancelled;
 use App\Models\Registration;
 use App\Models\User;
+use App\Notifications\RegistrationCancelledByAdminNotification;
 use App\Services\BusinessDay\BusinessDayService;
 use App\Settings\BookingSettings;
 use Illuminate\Support\Facades\DB;
@@ -44,13 +46,16 @@ class CancelRegistrationAction
         }
 
         return DB::transaction(function () use ($registration, $cancelledBy) {
+            // Capture avant le changement de statut pour le dispatch conditionnel
+            $wasRegistered = $registration->status === RegistrationStatus::Registered;
+
             $registration->update([
                 'status'       => RegistrationStatus::Cancelled,
                 'cancelled_at' => now(),
                 'cancelled_by' => $cancelledBy->id,
             ]);
 
-            // 5b. Recréditation conditionnelle (uniquement si carte valide)
+            // Recréditation conditionnelle (uniquement si carte valide)
             if ($registration->card_id) {
                 $card = $registration->card;
                 if ($card->isActive()) {
@@ -64,12 +69,30 @@ class CancelRegistrationAction
                 }
             }
 
-            // 5c. Journal d'audit
+            // Journal d'audit
             $isAdmin = $cancelledBy->hasRole('admin');
             activity()
                 ->performedOn($registration)
                 ->causedBy($cancelledBy)
                 ->log($isAdmin ? 'Annulation par l\'admin' : 'Inscription annulée');
+
+            // Dispatch et notifications après commit
+            DB::afterCommit(function () use ($registration, $cancelledBy, $wasRegistered) {
+                // Auto-promotion : uniquement si une place Registered est libérée
+                if ($wasRegistered) {
+                    event(new RegistrationCancelled(
+                        $registration->fresh(),
+                        $cancelledBy->hasRole('admin'),
+                    ));
+                }
+
+                // Notification admin → user (jamais pour une auto-annulation)
+                if ($cancelledBy->hasRole('admin') && $cancelledBy->id !== $registration->user_id) {
+                    $registration->user->notify(
+                        new RegistrationCancelledByAdminNotification($registration->fresh())
+                    );
+                }
+            });
 
             return $registration->fresh();
         });

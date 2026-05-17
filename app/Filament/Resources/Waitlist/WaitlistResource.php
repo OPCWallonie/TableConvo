@@ -21,11 +21,11 @@ class WaitlistResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClock;
 
-    protected static ?string $navigationLabel = 'Liste d\'attente globale';
+    protected static ?string $navigationLabel = 'Files d\'attente par session';
 
-    protected static ?string $modelLabel = 'Inscription en attente';
+    protected static ?string $modelLabel = 'Inscription en file d\'attente';
 
-    protected static ?string $pluralModelLabel = 'Liste d\'attente globale';
+    protected static ?string $pluralModelLabel = 'Files d\'attente par session';
 
     protected static \UnitEnum|string|null $navigationGroup = 'Gestion des inscriptions';
 

@@ -500,14 +500,87 @@ $schedule->command('app:mark-no-shows')->dailyAt('23:59');
 
 ---
 
-### Phase 8 — Déploiement (à venir)
+### Phase 8 — Vivier global + finalisation ✅ TERMINÉE (2026-05-14)
 
-1. Configuration serveur production (HTTPS, TrustProxies, env prod)
-2. 2FA pour les admins (`DanHarrin/filament-two-factor-authentication` ou équivalent)
-3. `php artisan storage:link` + S3/bucket pour PDF factures
-4. Mise en place monitoring (Sentry ou equivalent)
-5. Tests de charge minimal (checkout, webhooks Mollie)
-6. Sauvegarde automatique (`spatie/laravel-backup`)
+#### Concept introduit : Vivier global (`GlobalWaitlistEntry`)
+Quand un admin retire un inscrit ou un waitlisté d'une session, la personne peut être placée dans un vivier d'attente global (sans session affectée). L'admin peut ensuite réassigner ou dismiss depuis le back-office. L'utilisateur peut se retirer lui-même depuis l'espace membre.
+
+#### Modèle et migration
+- `global_waitlist_entries` : status `pending/reassigned/dismissed`, source `admin_removed_waitlist/admin_cancelled_registration/user_volunteer`
+- Enums : `GlobalWaitlistEntryStatus`, `GlobalWaitlistSource`
+
+#### Actions ajoutées (`app/Actions/GlobalWaitlist/`)
+- `MoveToGlobalWaitlistAction` — retire d'une session et place au vivier (recrédit carte optionnel)
+- `ReassignFromGlobalWaitlistAction` — réassigne vers une session (registered ou waitlist selon capacité)
+- `DismissGlobalWaitlistEntryAction` — retire du vivier (admin ou self-service utilisateur)
+- `FindCompatibleSessionsForGlobalEntryAction` — sessions futures compatibles niveau
+
+#### Back-office Filament
+- `GlobalWaitlistPoolResource` — table avec filtres niveau/source, actions Réassigner et Dismiss
+- `GlobalWaitlistWidget` — tableau de bord : count pending par niveau
+
+#### Espace membre
+- Section "Au vivier d'attente" sur `/espace/inscriptions` (au-dessus des sessions à venir)
+- Composant Livewire `DismissPoolButton` — self-service retrait avec modale de confirmation
+
+#### Notifications (3 nouvelles — toutes `ShouldQueue`)
+- `MovedToGlobalPoolNotification` — param `wasRecredited: bool`, variantes cancelled/waitlisted
+- `ReassignedFromGlobalPoolNotification` — registered ou waitlist, position si applicable
+- `DismissedFromGlobalPoolNotification` — retrait admin, sans raison interne (décision client)
+- Templates Markdown dans `resources/views/emails/global-pool/`
+
+#### Corrections et complétions
+- `AdminPanelProvider` → `->viteTheme('resources/css/app.css')` (fix SVG géant dans modales)
+- `tailwind.config.js` → ajout couleurs sémantiques `warning`, `danger`, `success`, `info`
+- `RegisterUserToTableActionTest` → corrigé bug timing ISO-semaine (jeudi/vendredi)
+
+#### Tests Pest — 439 tests verts (avant Phase 8 : 320)
+- `AssignLevelActionTest` (4 tests), `RequestLevelInterviewActionTest` (4 tests)
+- `PoolSectionTest` (5 tests), `MovedToGlobalPoolNotificationTest` (4 tests)
+- `MoveToGlobalWaitlistActionTest`, `ReassignFromGlobalWaitlistActionTest`, `DismissGlobalWaitlistEntryActionTest`
+- `WaitlistFlowTest` (integration), `GlobalWaitlistPoolResourceTest`
+
+**Non implémenté en Phase 8 (backlog Phase 9)** :
+- 2FA admin (estimation > 2h, Filament 5 sans natif)
+- Déploiement production (HTTPS, TrustProxies, storage:link, monitoring, backup)
+
+---
+
+### Phase 9 — Dashboard drill-down (widgets liés 3/7) ✅ TERMINÉE (2026-05-14)
+3 widgets du tableau de bord câblés vers leurs Resources respectives : Sessions cette semaine → ConversationTableResource, Cartes actives → CardResource, Taux de remplissage (SessionFillRateChartWidget, Pattern 3 avec vue blade custom) → ConversationTableResource.
+
+**Format URL Livewire 4 validé** : `filters[xxx][isActive]=1` (toggle) et `filters[xxx][value]=yyy` (select). Jamais `tableFilters[...]`.
+
+---
+
+### Phase 9.5 — OrderResource + RegistrationResource + finalisation drill-down ✅ TERMINÉE (2026-05-18)
+
+#### Concept introduit : Resources lecture seule admin
+Deux nouvelles Resources Filament entièrement en lecture seule (canCreate/canEdit/canDelete = false), avec ViewRecord + infolist, intégrées au panel admin.
+
+#### Resources ajoutées
+- `OrderResource` — groupe "Comptabilité", sort 1 ; infolist 3 sections (commande, société snapshot, financier) ; RelationManager `OrderItemsRelationManager` (relation `items`) ; filtres : statut, mois en cours, 12 derniers mois
+- `RegistrationResource` — groupe "Gestion des inscriptions", sort 1 ; infolist 3 sections (inscription, session, détails) ; filtres : statut, session future, session passée 30j, niveau (closure car chaîne 2 niveaux non supportée par `SelectFilter::relationship()`)
+
+#### Widgets dashboard désormais tous liés (7/7 hors Vivier)
+4 widgets patchés en Phase 9.5 : "Inscriptions en cours" → RegistrationResource, "Revenus du mois" → OrderResource, "Taux de no-show" → RegistrationResource, "Revenus HT 12 mois" (RevenueChartWidget, Pattern 3) → OrderResource.
+
+#### Bug corrigé
+`ActivityRelationManager.php` ligne 76 : `tableFilters` → `filters` (Livewire 4 URL binding, bug pré-existant depuis Phase 7).
+
+#### Pièges Filament 5 documentés
+- `searchable(['relation.column'])` génère du JSON SQL invalide sous SQLite → toujours utiliser closure `searchable(query: fn...)`
+- `SelectFilter::relationship()` ne supporte pas les chaînes multi-niveaux → closure `query:`
+- `->multiple()` change la clé de `value` à `values` → incompatible avec les URL drill-down → ne pas utiliser
+- `RelationManager` lazy-loaded → `assertSee()` HTTP impossible → `Livewire::test(RelationManager::class, ['ownerRecord' => ..., 'pageClass' => ...])`
+- `protected string $view` dans ChartWidget est **non-statique**
+
+#### Tests Pest — 475 tests verts (avant Phase 9.5 : 452)
+- `OrderResourceTest` (9 tests), `RegistrationResourceTest` (10 tests), `DashboardDrillDownTest` +4 tests
+
+**Non implémenté en Phase 9.5 (backlog Phase 10)** :
+- 2FA admin (estimation > 2h, Filament 5 sans natif)
+- Déploiement production
 
 ---
 

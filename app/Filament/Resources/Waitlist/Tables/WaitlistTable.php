@@ -101,6 +101,9 @@ class WaitlistTable
                     ->label('Réorienter')
                     ->icon(Heroicon::OutlinedArrowRightCircle)
                     ->color('primary')
+                    ->visible(fn (Registration $record) =>
+                        app(FindEligibleTargetSessionsAction::class)->execute($record)->isNotEmpty()
+                    )
                     ->modalHeading(fn (Registration $record) =>
                         "Réorienter {$record->user->full_name}"
                     )

@@ -5,8 +5,9 @@ namespace App\Actions\Registration;
 use App\Enums\RegistrationStatus;
 use App\Models\Registration;
 use App\Models\User;
-use RuntimeException;
+use App\Notifications\UserPromotedFromWaitlistNotification;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class PromoteFromWaitlistAction
 {
@@ -30,8 +31,8 @@ class PromoteFromWaitlistAction
             $card->decrement('sessions_remaining');
 
             $registration->update([
-                'status' => RegistrationStatus::Registered,
-                'card_id' => $card->id,
+                'status'            => RegistrationStatus::Registered,
+                'card_id'           => $card->id,
                 'waitlist_position' => null,
             ]);
 
@@ -39,6 +40,12 @@ class PromoteFromWaitlistAction
                 ->performedOn($registration)
                 ->causedBy($admin)
                 ->log('Promu depuis la liste d\'attente');
+
+            DB::afterCommit(function () use ($registration) {
+                $registration->user->notify(
+                    new UserPromotedFromWaitlistNotification($registration->fresh())
+                );
+            });
 
             return $registration->fresh();
         });

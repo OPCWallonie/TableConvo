@@ -15,6 +15,7 @@
         "mollie/laravel-mollie": "^4.1",
         "spatie/holidays": "^2.0",
         "spatie/laravel-activitylog": "^5.0",
+        "spatie/laravel-csp": "^3.24",
         "spatie/laravel-permission": "^7.4",
         "spatie/laravel-settings": "^3.8"
     },

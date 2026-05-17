@@ -82,7 +82,39 @@ class UsersTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make()
+                        ->before(function ($records, $action): void {
+                            $total = $records->count();
+                            $protectedCount = 0;
+
+                            foreach ($records as $record) {
+                                if (
+                                    $record->orders()->withTrashed()->exists() ||
+                                    $record->registrations()->withTrashed()->exists() ||
+                                    $record->cards()->withTrashed()->exists() ||
+                                    \App\Models\GlobalWaitlistEntry::withTrashed()->where('created_by', $record->id)->exists()
+                                ) {
+                                    $protectedCount++;
+                                }
+                            }
+
+                            if ($protectedCount === 0) {
+                                return;
+                            }
+
+                            Notification::make()
+                                ->danger()
+                                ->title('Suppression impossible')
+                                ->body(
+                                    "{$protectedCount} enregistrement(s) sur {$total} ne peuvent pas être supprimés " .
+                                    'car ils sont référencés ailleurs. ' .
+                                    'L\'opération a été annulée pour préserver l\'intégrité des données.'
+                                )
+                                ->persistent()
+                                ->send();
+
+                            $action->cancel();
+                        }),
                     RestoreBulkAction::make(),
                 ]),
             ]);

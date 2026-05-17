@@ -4,10 +4,12 @@ use App\Actions\Registration\CancelRegistrationAction;
 use App\Enums\CardStatus;
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
+use App\Events\RegistrationCancelled;
 use App\Models\Card;
 use App\Models\ConversationTable;
 use App\Models\Level;
 use App\Models\Order;
+use Illuminate\Support\Facades\Event;
 use App\Models\Registration;
 use App\Models\User;
 use App\Settings\BookingSettings;
@@ -310,4 +312,70 @@ it('correctly computes deadline when a Belgian holiday falls between today and t
         ->toThrow(RuntimeException::class, 'deadline_passed');
 
     Carbon::setTestNow(); // reset impératif
+});
+
+// ─────────────────────────────────────────────────────────────
+// Dispatch d'event
+// ─────────────────────────────────────────────────────────────
+
+it('dispatches RegistrationCancelled event when cancelling a Registered registration', function () {
+    Event::fake();
+
+    $settings = app(BookingSettings::class);
+    $settings->cancellation_deadline_business_days = 3;
+    $settings->save();
+
+    ['user' => $user, 'registration' => $registration] = makeRegistration(daysUntilSession: 10);
+
+    app(CancelRegistrationAction::class)->execute($registration, $user);
+
+    Event::assertDispatched(RegistrationCancelled::class, function (RegistrationCancelled $e) use ($registration) {
+        return $e->registration->id === $registration->id
+            && $e->cancelledByAdmin === false;
+    });
+});
+
+it('does not dispatch RegistrationCancelled when cancelling a Waitlist registration', function () {
+    Event::fake();
+
+    $settings = app(BookingSettings::class);
+    $settings->cancellation_deadline_business_days = 3;
+    $settings->save();
+
+    $level = Level::factory()->create();
+    $user  = User::factory()->withLevel($level)->create();
+    $table = ConversationTable::factory()->create([
+        'level_id'     => $level->id,
+        'scheduled_at' => now()->addDays(10),
+        'status'       => SessionStatus::Scheduled,
+    ]);
+    $waitlistReg = Registration::create([
+        'user_id'               => $user->id,
+        'conversation_table_id' => $table->id,
+        'card_id'               => null,
+        'status'                => RegistrationStatus::Waitlist,
+        'registered_at'         => now()->subHour(),
+        'waitlist_position'     => 1,
+    ]);
+
+    app(CancelRegistrationAction::class)->execute($waitlistReg, $user);
+
+    Event::assertNotDispatched(RegistrationCancelled::class);
+});
+
+it('dispatches RegistrationCancelled with cancelledByAdmin true when admin cancels', function () {
+    Event::fake();
+
+    $settings = app(BookingSettings::class);
+    $settings->cancellation_deadline_business_days = 3;
+    $settings->save();
+
+    ['registration' => $registration] = makeRegistration(daysUntilSession: 10);
+    $admin = makeAdmin();
+
+    app(CancelRegistrationAction::class)->execute($registration, $admin);
+
+    Event::assertDispatched(RegistrationCancelled::class, function (RegistrationCancelled $e) {
+        return $e->cancelledByAdmin === true;
+    });
 });

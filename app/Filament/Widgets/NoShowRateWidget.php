@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\RegistrationStatus;
+use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -43,7 +44,13 @@ class NoShowRateWidget extends StatsOverviewWidget
             Stat::make('Taux de no-show (30 j)', $rate . ' %')
                 ->description($noShowCount . ' absent(s) sur ' . $totalCount . ' inscription(s)')
                 ->icon(Heroicon::OutlinedUserMinus)
-                ->color($color),
+                ->color($color)
+                ->url(RegistrationResource::getUrl('index') . '?' . http_build_query([
+                    'filters' => [
+                        'status'               => ['value' => 'no_show'],
+                        'session_past_30_days' => ['isActive' => '1'],
+                    ],
+                ])),
         ];
     }
 }

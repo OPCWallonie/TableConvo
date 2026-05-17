@@ -120,7 +120,7 @@ it('blocks when weekly limit is reached', function () {
     $table1 = makeTable($level, 8, 3);
     $table2 = ConversationTable::factory()->create([
         'level_id' => $level->id,
-        'scheduled_at' => now()->addDays(4),
+        'scheduled_at' => now()->addDays(3)->endOfWeek()->subDays(1), // same ISO week as table1
         'status' => SessionStatus::Scheduled,
         'max_participants' => 8,
     ]);

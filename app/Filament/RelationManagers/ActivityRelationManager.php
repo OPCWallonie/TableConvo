@@ -73,7 +73,7 @@ class ActivityRelationManager extends RelationManager
                     ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
                     ->color('gray')
                     ->url(fn (): string => ActivityLogResource::getUrl('index') . '?' . http_build_query([
-                        'tableFilters' => [
+                        'filters' => [
                             'subject_type' => ['value' => get_class($ownerRecord)],
                             'subject_id'   => ['value' => $ownerRecord->getKey()],
                         ],

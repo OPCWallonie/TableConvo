@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CardTypes\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -45,7 +46,37 @@ class CardTypesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, $action): void {
+                            $total = $records->count();
+                            $protectedCount = 0;
+
+                            foreach ($records as $record) {
+                                if (
+                                    $record->cards()->withTrashed()->exists() ||
+                                    $record->orderItems()->exists()
+                                ) {
+                                    $protectedCount++;
+                                }
+                            }
+
+                            if ($protectedCount === 0) {
+                                return;
+                            }
+
+                            Notification::make()
+                                ->danger()
+                                ->title('Suppression impossible')
+                                ->body(
+                                    "{$protectedCount} enregistrement(s) sur {$total} ne peuvent pas être supprimés " .
+                                    'car ils sont référencés ailleurs. ' .
+                                    'L\'opération a été annulée pour préserver l\'intégrité des données.'
+                                )
+                                ->persistent()
+                                ->send();
+
+                            $action->cancel();
+                        }),
                 ]),
             ])
             ->defaultSort('price');

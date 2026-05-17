@@ -8,6 +8,8 @@ use App\Enums\RegistrationStatus;
 use App\Enums\SessionStatus;
 use App\Filament\Resources\Cards\CardResource;
 use App\Filament\Resources\ConversationTables\ConversationTableResource;
+use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Card;
 use App\Models\ConversationTable;
 use App\Models\Order;
@@ -54,7 +56,13 @@ class OperationalStatsWidget extends StatsOverviewWidget
             Stat::make('Inscriptions en cours', $activeRegistrations)
                 ->description('Inscrits confirmés, sessions à venir')
                 ->icon(Heroicon::OutlinedUserGroup)
-                ->color('success'),
+                ->color('success')
+                ->url(RegistrationResource::getUrl('index') . '?' . http_build_query([
+                    'filters' => [
+                        'status'         => ['value' => 'registered'],
+                        'session_future' => ['isActive' => '1'],
+                    ],
+                ])),
 
             Stat::make('Cartes actives', $activeCards)
                 ->description('Cartes avec des sessions disponibles')
@@ -67,7 +75,13 @@ class OperationalStatsWidget extends StatsOverviewWidget
             Stat::make('Revenus du mois (HT)', number_format((float) $monthlyRevenue, 2, ',', ' ') . ' €')
                 ->description('Commandes payées ce mois-ci')
                 ->icon(Heroicon::OutlinedBanknotes)
-                ->color('warning'),
+                ->color('warning')
+                ->url(OrderResource::getUrl('index') . '?' . http_build_query([
+                    'filters' => [
+                        'status'        => ['value' => 'paid'],
+                        'current_month' => ['isActive' => '1'],
+                    ],
+                ])),
         ];
     }
 }

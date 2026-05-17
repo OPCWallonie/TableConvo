@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Enums\RegistrationStatus;
 use App\Http\Controllers\Controller;
+use App\Models\GlobalWaitlistEntry;
 use Illuminate\View\View;
 
 class RegistrationsController extends Controller
@@ -29,6 +30,11 @@ class RegistrationsController extends Controller
             ->sortByDesc('conversationTable.scheduled_at')
             ->values();
 
-        return view('espace.inscriptions.index', compact('upcoming', 'past'));
+        $poolEntries = GlobalWaitlistEntry::where('user_id', $user->id)
+            ->pending()
+            ->with('level')
+            ->get();
+
+        return view('espace.inscriptions.index', compact('upcoming', 'past', 'poolEntries'));
     }
 }

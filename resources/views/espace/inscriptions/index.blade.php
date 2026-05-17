@@ -8,6 +8,41 @@
     <div class="py-10">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
+            {{-- ─── AU VIVIER D'ATTENTE ─────────────────────────────── --}}
+            @if($poolEntries->isNotEmpty())
+            <section>
+                <h3 class="text-base font-semibold text-warning-700 mb-4 flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-warning-400"></span>
+                    Au vivier d'attente
+                    <span class="ml-1 text-xs font-normal text-warning-500">({{ $poolEntries->count() }})</span>
+                </h3>
+
+                <div class="rounded-xl bg-warning-50 border border-warning-200 p-4 space-y-3">
+                    <p class="text-sm text-warning-800">
+                        Vous êtes inscrit(e) dans notre vivier d'attente. Notre équipe vous proposera
+                        une session compatible dès qu'une opportunité se présentera.
+                    </p>
+
+                    @foreach($poolEntries as $entry)
+                    <div class="flex items-center justify-between gap-4 bg-white rounded-lg px-4 py-3 border border-warning-100 shadow-sm">
+                        <div class="min-w-0">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-warning-100 text-warning-800">
+                                Niveau {{ $entry->level->code }}
+                            </span>
+                            <p class="text-xs text-gray-400 mt-1">
+                                En attente depuis {{ $entry->waitingDays }}
+                                {{ Str::plural('jour', $entry->waitingDays) }}
+                            </p>
+                        </div>
+                        <livewire:espace.dismiss-pool-button
+                            :entry-id="$entry->id"
+                            :key="'pool-'.$entry->id" />
+                    </div>
+                    @endforeach
+                </div>
+            </section>
+            @endif
+
             {{-- ─── À VENIR ─────────────────────────────────────────── --}}
             <section>
                 <h3 class="text-base font-semibold text-gray-700 mb-4 flex items-center gap-2">
