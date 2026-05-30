@@ -80,6 +80,27 @@ test('ne transfère pas si d\'autres company_admins existent déjà', function (
     expect($departing->fresh()->hasRole('company_admin'))->toBeFalse();
 });
 
+test('tie-breaker id : à created_at identique, le membre avec le plus petit id hérite', function () {
+    $company = Company::factory()->create();
+
+    $departing = User::factory()->create(['company_id' => $company->id, 'created_at' => now()->subDays(10)]);
+    $departing->assignRole('company_admin');
+
+    $sameTimestamp = now()->subDays(3);
+
+    // Créés séquentiellement avec le même timestamp — les ID sont donc croissants
+    $first  = User::factory()->create(['company_id' => $company->id, 'created_at' => $sameTimestamp]);
+    $second = User::factory()->create(['company_id' => $company->id, 'created_at' => $sameTimestamp]);
+
+    // $first a un ID inférieur à $second — le tie-breaker orderBy('id') doit le désigner
+    expect($first->id)->toBeLessThan($second->id);
+
+    app(TransferCompanyAdminAction::class)->execute($company, $departing);
+
+    expect($first->fresh()->hasRole('company_admin'))->toBeTrue();
+    expect($second->fresh()->hasRole('company_admin'))->toBeFalse();
+});
+
 test('retire le rôle au partant même s\'il l\'a encore', function () {
     $company = Company::factory()->create();
 
