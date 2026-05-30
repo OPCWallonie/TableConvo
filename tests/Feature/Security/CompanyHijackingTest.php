@@ -96,7 +96,37 @@ it('logs a join request activity entry when registering with an existing VAT', f
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 5 — Rate limiting : la 6e tentative reçoit HTTP 429 (INCHANGÉ)
+// Tests 5 & 6 — Garde-fous anti-hijacking : jamais company_admin sur company existante
+// Couvre les deux vecteurs d'attaque possibles : cas 3 (email perso) et cas 2 (auto-join).
+// ─────────────────────────────────────────────────────────────────────────────
+
+it('registering with an existing VAT never grants the company_admin role on the existing company', function () {
+    // Cas 3 — email perso (gmail) → pas d'auto-join → join request
+    Company::factory()->create(['vat_number' => 'BE0123456789', 'email_domain' => 'acme-sa.be']);
+    mockVat();
+
+    $this->post('/register', registrationPayload(['email' => 'attacker@gmail.com']));
+    $attacker = User::where('email', 'attacker@gmail.com')->first();
+
+    expect($attacker)->not->toBeNull();
+    expect($attacker->company_id)->toBeNull();
+    expect($attacker->hasRole('company_admin'))->toBeFalse();
+});
+
+it('registering with a matching pro domain auto-joins but never grants company_admin', function () {
+    // Cas 2 — email pro match → auto-join immédiat, mais jamais le rôle admin société
+    Company::factory()->create(['vat_number' => 'BE0123456789', 'email_domain' => 'acme-sa.be']);
+    mockVat();
+
+    $this->post('/register', registrationPayload(['email' => 'newbie@acme-sa.be']));
+    $user = User::where('email', 'newbie@acme-sa.be')->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->hasRole('company_admin'))->toBeFalse();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 7 — Rate limiting : la 6e tentative reçoit HTTP 429 (INCHANGÉ)
 // Le cache array est vidé en beforeEach global (Pest.php), état propre garanti.
 // ─────────────────────────────────────────────────────────────────────────────
 
