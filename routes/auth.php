@@ -11,6 +11,11 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
+// Endpoint public (sans auth) pour lookup TVA depuis le formulaire d'inscription
+Route::post('register/vat-lookup', [RegisteredUserController::class, 'vatLookup'])
+    ->name('register.vat-lookup')
+    ->middleware('throttle:company-creation');
+
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');

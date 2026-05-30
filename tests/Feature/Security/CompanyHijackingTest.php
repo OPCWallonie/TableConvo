@@ -1,15 +1,21 @@
 <?php
 
+use App\Enums\CompanyJoinRequestStatus;
 use App\Models\Company;
+use App\Models\CompanyJoinRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    Role::firstOrCreate(['name' => 'company_admin', 'guard_name' => 'web']);
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 1 — Chemin nominal : nouvelle TVA → company + user créés
+// Test 1 — Chemin nominal : nouvelle TVA → company + user créés (INCHANGÉ)
 // ─────────────────────────────────────────────────────────────────────────────
 
 it('registering with a new unique VAT number creates the company and user', function () {
@@ -22,56 +28,75 @@ it('registering with a new unique VAT number creates the company and user', func
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 2 — Vulnérabilité critique : TVA déjà prise → rejet (garde-régression)
-// Ce test s'exécute contre le vrai contrôleur d'inscription (RegisteredUserController).
+// Test 2 — TVA déjà prise → orientation (join request), pas de rejet
+// Changement délibéré Phase 9.6 D.1 : l'anti-hijacking ne rejette plus,
+// il oriente vers auto-join (cas 2) ou join request (cas 3).
 // ─────────────────────────────────────────────────────────────────────────────
 
-it('registering a new user with a VAT number that already exists fails', function () {
-    Company::factory()->create(['vat_number' => 'BE0123456789']);
+it('registering with an existing VAT creates the user and a join request instead of rejecting', function () {
+    Company::factory()->create(['vat_number' => 'BE0123456789', 'email_domain' => null]);
 
     mockVat();
 
-    $response = $this->post('/register', registrationPayload(['email' => 'attacker@example.com']));
+    $response = $this->post('/register', registrationPayload(['email' => 'newcomer@example.com']));
 
-    $this->assertGuest();
-    $response->assertSessionHasErrors('vat_number');
-    expect(session('errors')->first('vat_number'))->toContain('déjà enregistrée');
+    // L'user EST créé et loggé (pas rejeté)
+    $this->assertAuthenticated();
+    expect(User::where('email', 'newcomer@example.com')->exists())->toBeTrue();
+
+    // Il est redirigé vers le profil avec le statut request_pending
+    $response->assertRedirect(route('espace.profil'));
+    $response->assertSessionHas('status', 'request_pending');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 3 — Aucune nouvelle company créée lors d'un hijacking tenté
+// Test 3 — Aucune société dupliquée, mais l'user EST créé avec un join request
+// Changement délibéré Phase 9.6 D.1
 // ─────────────────────────────────────────────────────────────────────────────
 
-it('does not create a duplicate company when VAT is already taken', function () {
-    Company::factory()->create(['vat_number' => 'BE0123456789']);
+it('does not create a duplicate company and routes to join request when VAT is already taken', function () {
+    $company = Company::factory()->create(['vat_number' => 'BE0123456789', 'email_domain' => null]);
 
     mockVat();
 
-    $this->post('/register', registrationPayload(['email' => 'attacker@example.com']));
+    $this->post('/register', registrationPayload(['email' => 'newcomer@example.com']));
 
+    // Pas de société dupliquée
     expect(Company::where('vat_number', 'BE0123456789')->count())->toBe(1);
-    expect(User::where('email', 'attacker@example.com')->exists())->toBeFalse();
+
+    // L'user est bien créé (cas 3 : join request)
+    $user = User::where('email', 'newcomer@example.com')->first();
+    expect($user)->not->toBeNull();
+    expect($user->company_id)->toBeNull();
+
+    // Un join request pending a été créé
+    expect(
+        CompanyJoinRequest::where('user_id', $user->id)
+            ->where('company_id', $company->id)
+            ->where('status', CompanyJoinRequestStatus::Pending->value)
+            ->exists()
+    )->toBeTrue();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 4 — La tentative de hijacking est tracée dans l'activity log
+// Test 4 — Activity log produit par RequestCompanyJoinAction (pas hijacking)
+// Changement délibéré Phase 9.6 D.1 : le log "Tentative d'inscription" disparaît,
+// remplacé par le log de l'Action "Demande d'adhésion soumise".
 // ─────────────────────────────────────────────────────────────────────────────
 
-it('logs an activity entry when a duplicate VAT registration is attempted', function () {
-    Company::factory()->create(['vat_number' => 'BE0123456789']);
+it('logs a join request activity entry when registering with an existing VAT', function () {
+    Company::factory()->create(['vat_number' => 'BE0123456789', 'email_domain' => null]);
 
     mockVat();
 
-    $this->post('/register', registrationPayload(['email' => 'spy@example.com']));
+    $this->post('/register', registrationPayload(['email' => 'newcomer@example.com']));
 
-    $activity = Activity::latest()->first();
+    $activity = Activity::where('description', 'Demande d\'adhésion soumise')->latest()->first();
     expect($activity)->not->toBeNull();
-    expect($activity->description)->toBe("Tentative d'inscription avec numéro de TVA déjà enregistré");
-    expect($activity->properties['vat_number'])->toBe('BE0123456789');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 5 — Rate limiting : la 6e tentative reçoit HTTP 429
+// Test 5 — Rate limiting : la 6e tentative reçoit HTTP 429 (INCHANGÉ)
 // Le cache array est vidé en beforeEach global (Pest.php), état propre garanti.
 // ─────────────────────────────────────────────────────────────────────────────
 

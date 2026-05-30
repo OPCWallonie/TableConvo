@@ -30,6 +30,12 @@ class CompanyForm
                             ->label('E-mail de facturation')
                             ->email()
                             ->maxLength(255),
+                        TextInput::make('email_domain')
+                            ->label('Domaine email pro (auto-trust)')
+                            ->helperText('Ex: acme-sa.be — laissez vide pour désactiver l\'auto-trust à l\'inscription.')
+                            ->maxLength(255)
+                            ->nullable()
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Adresse')

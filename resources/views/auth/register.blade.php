@@ -1,5 +1,7 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
+    <form method="POST" action="{{ route('register') }}"
+          x-data="registerVatLookup()"
+          @submit.prevent="submit">
         @csrf
 
         {{-- Informations personnelles --}}
@@ -53,38 +55,55 @@
         <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mt-6 mb-3">Votre société</h3>
 
         <div>
+            <x-input-label for="vat_number" value="Numéro de TVA (format BE0XXXXXXXXX)" />
+            <x-text-input id="vat_number" class="block mt-1 w-full" type="text" name="vat_number"
+                :value="old('vat_number')" required placeholder="BE0123456789"
+                x-model="vatNumber"
+                @input.debounce.600ms="lookup" />
+            <x-input-error :messages="$errors->get('vat_number')" class="mt-2" />
+
+            {{-- Bandeau info si société déjà connue --}}
+            <template x-if="lookupStatus === 'exists'">
+                <div class="mt-2 rounded-md bg-info-50 border border-info-200 p-3 text-sm text-info-800">
+                    <span class="font-medium" x-text="knownName"></span> est déjà enregistrée chez TableConvo.
+                    Si vous y travaillez, votre inscription vous rattachera automatiquement ou créera une demande d'adhésion.
+                </div>
+            </template>
+        </div>
+
+        {{-- Champs société — désactivés si company déjà connue --}}
+        <div class="mt-4" :class="{ 'opacity-50 pointer-events-none': lookupStatus === 'exists' }">
             <x-input-label for="company_name" value="Nom de la société" />
             <x-text-input id="company_name" class="block mt-1 w-full" type="text" name="company_name"
-                :value="old('company_name')" required autocomplete="organization" />
+                :value="old('company_name')" autocomplete="organization"
+                x-model="companyName"
+                x-bind:readonly="lookupStatus === 'exists'" />
             <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
         </div>
 
-        <div class="mt-4">
-            <x-input-label for="vat_number" value="Numéro de TVA (format BE0XXXXXXXXX)" />
-            <x-text-input id="vat_number" class="block mt-1 w-full" type="text" name="vat_number"
-                :value="old('vat_number')" required placeholder="BE0123456789" />
-            <x-input-error :messages="$errors->get('vat_number')" class="mt-2" />
-        </div>
-
-        <div class="mt-4">
+        <div class="mt-4" :class="{ 'opacity-50 pointer-events-none': lookupStatus === 'exists' }">
             <x-input-label for="street" value="Rue et numéro" />
             <x-text-input id="street" class="block mt-1 w-full" type="text" name="street"
-                :value="old('street')" required autocomplete="street-address" />
+                :value="old('street')" autocomplete="street-address"
+                x-model="street"
+                x-bind:readonly="lookupStatus === 'exists'" />
             <x-input-error :messages="$errors->get('street')" class="mt-2" />
         </div>
 
-        <div class="grid grid-cols-3 gap-4 mt-4">
+        <div class="grid grid-cols-3 gap-4 mt-4" :class="{ 'opacity-50 pointer-events-none': lookupStatus === 'exists' }">
             <div class="col-span-1">
                 <x-input-label for="postal_code" value="Code postal" />
                 <x-text-input id="postal_code" class="block mt-1 w-full" type="text" name="postal_code"
-                    :value="old('postal_code')" required autocomplete="postal-code" />
+                    :value="old('postal_code')" autocomplete="postal-code"
+                    x-bind:readonly="lookupStatus === 'exists'" />
                 <x-input-error :messages="$errors->get('postal_code')" class="mt-2" />
             </div>
 
             <div class="col-span-2">
                 <x-input-label for="city" value="Ville" />
                 <x-text-input id="city" class="block mt-1 w-full" type="text" name="city"
-                    :value="old('city')" required autocomplete="address-level2" />
+                    :value="old('city')" autocomplete="address-level2"
+                    x-bind:readonly="lookupStatus === 'exists'" />
                 <x-input-error :messages="$errors->get('city')" class="mt-2" />
             </div>
         </div>
@@ -107,4 +126,53 @@
             </x-primary-button>
         </div>
     </form>
+
+    <script>
+    function registerVatLookup() {
+        return {
+            vatNumber: '{{ old('vat_number', '') }}',
+            lookupStatus: null,
+            knownName: '',
+            companyName: '{{ old('company_name', '') }}',
+            street: '{{ old('street', '') }}',
+
+            async lookup() {
+                if (this.vatNumber.length < 8) {
+                    this.lookupStatus = null;
+                    return;
+                }
+
+                try {
+                    const res = await fetch('{{ route('register.vat-lookup') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ vat_number: this.vatNumber }),
+                    });
+                    const data = await res.json();
+
+                    if (data.status === 'exists') {
+                        this.lookupStatus = 'exists';
+                        this.knownName = data.company?.name ?? '';
+                    } else if (data.status === 'new') {
+                        this.lookupStatus = 'new';
+                        if (data.name) this.companyName = data.name;
+                        if (data.street) this.street = data.street;
+                    } else {
+                        this.lookupStatus = null;
+                    }
+                } catch {
+                    this.lookupStatus = null;
+                }
+            },
+
+            submit() {
+                this.$el.submit();
+            },
+        };
+    }
+    </script>
 </x-guest-layout>
