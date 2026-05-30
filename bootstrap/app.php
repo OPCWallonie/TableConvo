@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \Spatie\Csp\AddCspHeaders::class,
         ]);
+
+        $middleware->alias([
+            'ensure.company' => \App\Http\Middleware\EnsureUserHasCompany::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

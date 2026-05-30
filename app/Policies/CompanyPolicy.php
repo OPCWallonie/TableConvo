@@ -34,6 +34,11 @@ class CompanyPolicy
 
     public function manageMembers(User $user, Company $company): bool
     {
+        return $user->isCompanyAdmin($company) || $user->hasRole('admin');
+    }
+
+    public function reassignAdmin(User $user, Company $company): bool
+    {
         return $user->hasRole('admin');
     }
 
