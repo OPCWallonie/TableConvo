@@ -101,3 +101,16 @@ it('admin of another company cannot approve a join request', function () {
         ->post(route('espace.societe.demandes.approuver', $joinRequest))
         ->assertForbidden();
 });
+
+it('index always returns the connected user company, not another company', function () {
+    $companyA = Company::factory()->create();
+    Company::factory()->create(); // companyB existe mais n'est jamais visible
+
+    $adminA = User::factory()->for($companyA)->create();
+    $adminA->assignRole('company_admin');
+
+    $this->actingAs($adminA)
+        ->get(route('espace.societe.membres'))
+        ->assertOk()
+        ->assertViewHas('company', fn ($c) => $c->id === $companyA->id);
+});
