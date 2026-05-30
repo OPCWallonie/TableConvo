@@ -19,15 +19,26 @@
                         Tarifs
                     </x-nav-link>
                     @auth
-                    <x-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.dashboard')">
-                        Tableau de bord
-                    </x-nav-link>
-                    <x-nav-link :href="route('espace.inscriptions')" :active="request()->routeIs('espace.inscriptions')">
-                        Mes inscriptions
-                    </x-nav-link>
-                    <x-nav-link :href="route('espace.cartes')" :active="request()->routeIs('espace.cartes')">
-                        Mes cartes
-                    </x-nav-link>
+                    @if (Auth::user()->hasRole('admin'))
+                        <x-nav-link href="/admin" :active="false">
+                            Panel admin
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.dashboard')">
+                            Tableau de bord
+                        </x-nav-link>
+                        <x-nav-link :href="route('espace.inscriptions')" :active="request()->routeIs('espace.inscriptions')">
+                            Mes inscriptions
+                        </x-nav-link>
+                        <x-nav-link :href="route('espace.cartes')" :active="request()->routeIs('espace.cartes')">
+                            Mes cartes
+                        </x-nav-link>
+                        @can('manageMembers', Auth::user()->company)
+                            <x-nav-link :href="route('espace.societe.membres')" :active="request()->routeIs('espace.societe.membres')">
+                                Mes membres
+                            </x-nav-link>
+                        @endcan
+                    @endif
                     @endauth
                 </div>
             </div>
@@ -91,15 +102,26 @@
                 Tarifs
             </x-responsive-nav-link>
             @auth
-            <x-responsive-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.dashboard')">
-                Tableau de bord
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('espace.inscriptions')" :active="request()->routeIs('espace.inscriptions')">
-                Mes inscriptions
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('espace.cartes')" :active="request()->routeIs('espace.cartes')">
-                Mes cartes
-            </x-responsive-nav-link>
+            @if (Auth::user()->hasRole('admin'))
+                <x-responsive-nav-link href="/admin" :active="false">
+                    Panel admin
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('espace.dashboard')" :active="request()->routeIs('espace.dashboard')">
+                    Tableau de bord
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('espace.inscriptions')" :active="request()->routeIs('espace.inscriptions')">
+                    Mes inscriptions
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('espace.cartes')" :active="request()->routeIs('espace.cartes')">
+                    Mes cartes
+                </x-responsive-nav-link>
+                @can('manageMembers', Auth::user()->company)
+                    <x-responsive-nav-link :href="route('espace.societe.membres')" :active="request()->routeIs('espace.societe.membres')">
+                        Mes membres
+                    </x-responsive-nav-link>
+                @endcan
+            @endif
             @endauth
         </div>
 

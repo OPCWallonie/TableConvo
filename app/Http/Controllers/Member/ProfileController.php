@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Member;
 
 use App\Actions\User\AnonymizeUserAction;
+use App\Enums\CompanyJoinRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
@@ -14,8 +15,18 @@ class ProfileController extends Controller
 {
     public function show(Request $request): View
     {
+        $user = $request->user()->load('company', 'level');
+
+        $pendingRequest = $user->company_id === null
+            ? $user->companyJoinRequests()
+                ->where('status', CompanyJoinRequestStatus::Pending->value)
+                ->with('company')
+                ->first()
+            : null;
+
         return view('espace.profil', [
-            'user' => $request->user()->load('company', 'level'),
+            'user'           => $user,
+            'pendingRequest' => $pendingRequest,
         ]);
     }
 

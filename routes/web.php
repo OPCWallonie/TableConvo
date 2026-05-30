@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Member\CartesController;
+use App\Http\Controllers\Member\CompanyController;
+use App\Http\Controllers\Member\CompanyJoinRequestController;
+use App\Http\Controllers\Member\CompanyMembersController;
 use App\Http\Controllers\Member\DashboardController;
 use App\Http\Controllers\Member\InvoiceController;
 use App\Http\Controllers\Member\ProfileController as MemberProfileController;
@@ -29,8 +32,8 @@ Route::get('/confidentialite', [LegalController::class, 'confidentialite'])->nam
 Route::get('/achat', fn () => redirect()->route('tarifs'))->name('achat.index');
 Route::get('/achat/{cardType}', [ShopController::class, 'show'])->name('achat.show');
 
-// --- Panier & checkout (auth requis) ---
-Route::middleware(['auth', 'verified'])->group(function () {
+// --- Panier & checkout (auth requis + garde-fou company) ---
+Route::middleware(['auth', 'verified', 'ensure.company'])->group(function () {
     Route::get('/panier', fn () => view('public.panier'))->name('panier');
     Route::post('/panier/checkout', [CheckoutController::class, 'store'])->name('panier.checkout')->middleware('throttle:checkout');
 });
@@ -57,6 +60,21 @@ Route::prefix('espace')->name('espace.')->middleware(['auth', 'verified'])->grou
     Route::patch('/profil', [MemberProfileController::class, 'update'])->name('profil.update');
     Route::get('/donnees', [MemberProfileController::class, 'exportData'])->name('donnees');
     Route::delete('/compte', [MemberProfileController::class, 'destroy'])->name('compte.destroy')->middleware('throttle:account-deletion');
+
+    // --- Société : création self-service ---
+    Route::get('/societe/creer', [CompanyController::class, 'create'])->name('societe.creer');
+    Route::post('/societe', [CompanyController::class, 'store'])->name('societe.store')->middleware('throttle:company-creation');
+
+    // --- Société : rejoindre par TVA ---
+    Route::get('/societe/rejoindre', [CompanyJoinRequestController::class, 'create'])->name('societe.rejoindre');
+    Route::post('/societe/rejoindre/lookup', [CompanyJoinRequestController::class, 'lookup'])->name('societe.rejoindre.lookup')->middleware('throttle:company-creation');
+    Route::post('/societe/rejoindre', [CompanyJoinRequestController::class, 'store'])->name('societe.rejoindre.store')->middleware('throttle:company-creation');
+    Route::post('/societe/ma-demande/annuler', [CompanyJoinRequestController::class, 'cancel'])->name('societe.ma-demande.annuler');
+
+    // --- Société : gestion membres (company_admin) ---
+    Route::get('/societe/membres', [CompanyMembersController::class, 'index'])->name('societe.membres');
+    Route::post('/societe/demandes/{joinRequest}/approuver', [CompanyMembersController::class, 'approve'])->name('societe.demandes.approuver');
+    Route::post('/societe/demandes/{joinRequest}/rejeter', [CompanyMembersController::class, 'reject'])->name('societe.demandes.rejeter');
 });
 
 // Compat dashboard
