@@ -31,6 +31,7 @@ class TransferCompanyAdminAction
             ->when($departingUser, fn ($q) => $q->where('users.id', '!=', $departingUser->id))
             ->whereNull('users.deleted_at')
             ->oldest('users.created_at')
+            ->orderBy('users.id')
             ->first();
 
         if ($successor === null) {

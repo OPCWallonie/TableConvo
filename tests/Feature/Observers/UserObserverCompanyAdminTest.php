@@ -54,3 +54,27 @@ test('si aucun successeur, le super admin est notifié', function () {
 
     Notification::assertSentTo($superAdmin, CompanyAdminVacantNotification::class);
 });
+
+test('(b) le changement de company_id déclenche la succession sur l\'ancienne company uniquement', function () {
+    $oldCompany = Company::factory()->create();
+    $newCompany = Company::factory()->create();
+
+    // User A : seul company_admin de oldCompany
+    $userA = User::factory()->create(['company_id' => $oldCompany->id, 'created_at' => now()->subDays(5)]);
+    $userA->assignRole('company_admin');
+
+    // User B : membre de oldCompany — le futur successeur
+    $userB = User::factory()->create(['company_id' => $oldCompany->id, 'created_at' => now()->subDays(1)]);
+
+    // User A change de company → déclenche UserObserver::updated
+    $userA->update(['company_id' => $newCompany->id]);
+
+    // Succession sur oldCompany : userB devient company_admin
+    expect($userB->fresh()->hasRole('company_admin'))->toBeTrue();
+
+    // userA perd son rôle (il administrait oldCompany, pas newCompany)
+    expect($userA->fresh()->hasRole('company_admin'))->toBeFalse();
+
+    // newCompany n'est PAS affectée : aucune succession parasite
+    expect($newCompany->fresh()->admins()->count())->toBe(0);
+});
