@@ -2,6 +2,7 @@
 
 namespace App\Services\Vat;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -57,5 +58,44 @@ class VatValidationService
         }
 
         return preg_replace('/\s+/', '', $upper);
+    }
+
+    public function lookup(string $vatNumber): ?VatLookupResult
+    {
+        $normalized = $this->normalize($vatNumber);
+
+        if (! $this->isFormatValid($normalized)) {
+            return null;
+        }
+
+        $number = substr($normalized, 2);
+
+        try {
+            $response = Http::timeout(10)->get(self::VIES_URL . $number);
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (! ($data['isValid'] ?? false)) {
+                return null;
+            }
+
+            return new VatLookupResult(
+                name: $data['name'] ?? '---',
+                address: $data['address'] ?? '---',
+                vatNumber: $normalized,
+                validatedAt: Carbon::now(),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('VIES API unavailable during lookup', [
+                'vat'   => $normalized,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 }

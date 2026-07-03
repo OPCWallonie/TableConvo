@@ -19,10 +19,31 @@ class Company extends Model
         'city',
         'country',
         'billing_email',
+        'email_domain',
     ];
 
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function members(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function admins(): HasMany
+    {
+        return $this->members()->role('company_admin');
+    }
+
+    public function joinRequests(): HasMany
+    {
+        return $this->hasMany(CompanyJoinRequest::class);
+    }
+
+    public function pendingJoinRequests(): HasMany
+    {
+        return $this->joinRequests()->where('status', 'pending');
     }
 }

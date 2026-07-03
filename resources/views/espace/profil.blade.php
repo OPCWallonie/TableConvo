@@ -8,6 +8,21 @@
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            {{-- Flash : société manquante (redirection depuis un flux bloqué) --}}
+            @if (session('status') === 'company_missing')
+                <div class="bg-warning-50 border border-warning-300 text-warning-800 rounded-lg p-4 text-sm">
+                    Vous devez rattacher votre compte à une société avant de continuer.
+                </div>
+            @elseif (session('status') === 'company_created')
+                <div class="bg-success-50 border border-success-300 text-success-800 rounded-lg p-4 text-sm">
+                    Votre société a bien été créée. Vous en êtes l'administrateur.
+                </div>
+            @elseif (session('status') === 'request_pending')
+                <div class="bg-info-50 border border-info-200 text-info-800 rounded-lg p-4 text-sm">
+                    Votre demande d'adhésion a été transmise à l'administrateur de la société. Vous serez notifié par e-mail dès qu'elle sera traitée.
+                </div>
+            @endif
+
             {{-- Formulaire de mise à jour du profil --}}
             <div class="bg-white shadow sm:rounded-lg p-6">
                 <form id="send-verification" method="post" action="{{ route('verification.send') }}">
@@ -77,10 +92,18 @@
                 </form>
             </div>
 
-            {{-- Société (lecture seule) --}}
+            {{-- Société --}}
             @if ($user->company)
                 <div class="bg-white shadow sm:rounded-lg p-6">
-                    <h3 class="text-base font-medium text-gray-900 mb-1">Ma société</h3>
+                    <div class="flex items-start justify-between mb-1">
+                        <h3 class="text-base font-medium text-gray-900">Ma société</h3>
+                        @can('manageMembers', $user->company)
+                            <a href="{{ route('espace.societe.membres') }}"
+                               class="text-sm font-medium text-primary hover:underline">
+                                Gérer les membres
+                            </a>
+                        @endcan
+                    </div>
                     <p class="text-xs text-gray-500 mb-4">Pour modifier les informations de votre société, contactez un administrateur.</p>
 
                     <dl class="space-y-2 text-sm text-gray-700">
@@ -92,6 +115,41 @@
                         @endif
                     </dl>
                 </div>
+            @elseif (! $user->hasRole('admin'))
+                {{-- Pas encore rattaché à une société --}}
+                @if ($pendingRequest)
+                    <div class="bg-warning-50 border border-warning-300 rounded-lg p-4">
+                        <p class="font-medium text-warning-800">Demande en attente pour {{ $pendingRequest->company->name }}</p>
+                        <p class="text-sm text-warning-700 mt-1">
+                            Votre demande d'adhésion a été transmise. Vous serez notifié par e-mail dès qu'elle sera traitée.
+                        </p>
+                        <form method="POST" action="{{ route('espace.societe.ma-demande.annuler') }}" class="mt-3">
+                            @csrf
+                            <button type="submit"
+                                class="text-sm font-medium text-warning-700 underline hover:no-underline"
+                                onclick="return confirm('Annuler votre demande ?')">
+                                Annuler ma demande
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <div class="bg-white shadow sm:rounded-lg p-6">
+                        <h3 class="text-base font-medium text-gray-900 mb-1">Ma société</h3>
+                        <p class="text-sm text-gray-500 mb-4">
+                            Votre compte n'est pas encore rattaché à une société. Vous pouvez en créer une ou rejoindre une société existante.
+                        </p>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="{{ route('espace.societe.creer') }}"
+                               class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-md hover:opacity-90">
+                                Créer ma société
+                            </a>
+                            <a href="{{ route('espace.societe.rejoindre') }}"
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50">
+                                Rejoindre une société existante
+                            </a>
+                        </div>
+                    </div>
+                @endif
             @endif
 
             {{-- Niveau --}}

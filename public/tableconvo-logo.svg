@@ -1,0 +1,14 @@
+<svg width="160" height="160" viewBox="0 0 160 160" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>TableConvo</title>
+<desc>Table de conversation vue de dessus : un animateur et sept participants autour d'une table ronde.</desc>
+<rect x="0" y="0" width="160" height="160" rx="40" fill="var(--color-primary, #2C5F5A)"/>
+<circle cx="80" cy="80" r="42" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="80" cy="22" r="13" fill="var(--color-accent, #E0A458)"/>
+<circle cx="121" cy="39" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="138" cy="80" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="121" cy="121" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="80" cy="138" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="39" cy="121" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="22" cy="80" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+<circle cx="39" cy="39" r="9.5" fill="var(--color-background-primary, #FFFFFF)"/>
+</svg>

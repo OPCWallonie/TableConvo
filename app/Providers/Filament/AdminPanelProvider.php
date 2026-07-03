@@ -32,6 +32,9 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->brandName('TableConvo — Admin')
+            ->brandLogo(asset('tableconvo-logo.svg'))
+            ->brandLogoHeight('2rem')
+            ->favicon(asset('favicon.ico'))
             // ->viteTheme('resources/css/app.css')
             ->authGuard('web')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

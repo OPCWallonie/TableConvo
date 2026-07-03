@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Actions\Company\AssignCompanyAdminAction;
 use App\Actions\User\AnonymizeUserAction;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -35,6 +36,19 @@ class UsersTable
                     ->label('Société')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('role_label')
+                    ->label('Rôle')
+                    ->badge()
+                    ->getStateUsing(fn (User $record): string => match (true) {
+                        $record->hasRole('admin')         => 'Super admin',
+                        $record->hasRole('company_admin') => 'Admin société',
+                        default                           => 'Membre',
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'Super admin'  => 'danger',
+                        'Admin société' => 'warning',
+                        default        => 'gray',
+                    }),
                 TextColumn::make('level.code')
                     ->label('Niveau')
                     ->badge()
@@ -60,6 +74,30 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make(),
+
+                Action::make('setAsCompanyAdmin')
+                    ->label('Définir admin société')
+                    ->icon(Heroicon::OutlinedShieldCheck)
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->modalHeading('Réassigner l\'administrateur')
+                    ->modalDescription(fn (User $record) => "Définir {$record->full_name} comme administrateur de {$record->company?->name} ?")
+                    ->modalSubmitActionLabel('Confirmer')
+                    ->visible(fn (User $record) =>
+                        $record->company_id !== null && auth()->user()?->hasRole('admin')
+                    )
+                    ->action(function (User $record): void {
+                        app(AssignCompanyAdminAction::class)->execute(
+                            actor: auth()->user(),
+                            company: $record->company,
+                            newAdmin: $record,
+                        );
+
+                        Notification::make()
+                            ->title('Administrateur réassigné.')
+                            ->success()
+                            ->send();
+                    }),
 
                 Action::make('anonymize')
                     ->label('Anonymiser')

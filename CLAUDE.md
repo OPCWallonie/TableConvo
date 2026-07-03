@@ -183,6 +183,31 @@ composer require --dev pestphp/pest pestphp/pest-plugin-laravel
 
 ---
 
+## 5bis. Rôles et souveraineté (Phase 9.6)
+
+### Rôles Spatie Permission
+- **`admin`** — super administrateur TableConvo. Accès Filament complet. Peut tout faire sur toutes les sociétés.
+- **`company_admin`** — administrateur d'une société cliente. Accès uniquement à `/espace/societe/membres`. N'a PAS accès au panel Filament.
+- *(pas de rôle)* — employé membre d'une société, ou user en attente de rattachement.
+
+### Souveraineté contextuelle du company_admin
+`isCompanyAdmin(Company $company)` vérifie : `hasRole('company_admin') AND company_id === $company->id`.
+Un company_admin n'a de pouvoir que sur SA propre société. Jamais cross-company.
+
+### Middleware
+- `EnsureUserHasCompany` — bloque `/panier` uniquement. N'affecte pas `/espace/profil` ni les routes société (les users sans company doivent pouvoir y accéder).
+
+### Succession automatique (UserObserver)
+Quand un user avec le rôle `company_admin` est soft-deleted, `UserObserver::deleted()` déclenche `TransferCompanyAdminAction` si aucun autre admin ne reste. La succession va au membre actif le plus ancien (`oldest('users.created_at')`, tie-breaker `id`).
+
+### Flux d'inscription multi-membres (4 cas)
+- **Cas 1** : nouvelle TVA → company créée, user = company_admin, email_domain détecté si domaine professionnel.
+- **Cas 2** : TVA existante + email domain match → auto-rattachement via `AutoJoinCompanyByEmailDomainAction`, rôle member (jamais company_admin).
+- **Cas 3** : TVA existante, pas d'auto-join → user créé sans company + join request pending via `RequestCompanyJoinAction`.
+- **Cas 4** : format invalide ou VIES KO → `ValidationException`.
+
+---
+
 ## 6. Architecture & organisation
 
 ### Structure des dossiers
@@ -331,15 +356,34 @@ GET/POST /login, /register, /logout, /password/*
 
 ### Espace membre (middleware: auth)
 ```
-GET  /espace                 → dashboard
-GET  /espace/cartes          → mes cartes (active + historique)
-GET  /espace/inscriptions    → à venir / passées
-GET  /espace/historique      → toutes les transactions
-GET  /espace/factures        → liste
-GET  /espace/factures/{id}/pdf → téléchargement PDF
-GET  /espace/profil          → coordonnées + société
-PUT  /espace/profil          → MAJ coordonnées
-GET  /espace/donnees         → export RGPD (JSON)
+GET  /espace                           → dashboard
+GET  /espace/cartes                    → mes cartes (active + historique)
+GET  /espace/inscriptions              → à venir / passées
+GET  /espace/historique                → toutes les transactions
+GET  /espace/factures                  → liste
+GET  /espace/factures/{id}/pdf         → téléchargement PDF
+GET  /espace/profil                    → coordonnées + société
+PUT  /espace/profil                    → MAJ coordonnées
+GET  /espace/donnees                   → export RGPD (JSON)
+DELETE /espace/compte                  → suppression compte (soft-delete + anonymisation)
+```
+
+### Société self-service (middleware: auth — Phase 9.6)
+```
+GET  /espace/societe/creer             → formulaire création société (user sans company)
+POST /espace/societe                   → crée la société (throttle: company-creation)
+GET  /espace/societe/rejoindre         → formulaire rejoindre une société existante
+POST /espace/societe/rejoindre/lookup  → vérification TVA JSON (throttle: company-creation)
+POST /espace/societe/rejoindre         → soumet join request (throttle: company-creation)
+POST /espace/societe/ma-demande/annuler → annule la demande en attente (self-service)
+GET  /espace/societe/membres           → liste membres + demandes (company_admin seulement)
+POST /espace/societe/demandes/{joinRequest}/approuver → approuve join request
+POST /espace/societe/demandes/{joinRequest}/rejeter   → rejette join request
+```
+
+### Route publique auth — VAT lookup (Phase 9.6)
+```
+POST /register/vat-lookup   → lookup TVA Alpine.js (guest, throttle: company-creation)
 ```
 
 ### Achat (auth requis)
@@ -581,6 +625,72 @@ Deux nouvelles Resources Filament entièrement en lecture seule (canCreate/canEd
 **Non implémenté en Phase 9.5 (backlog Phase 10)** :
 - 2FA admin (estimation > 2h, Filament 5 sans natif)
 - Déploiement production
+
+---
+
+### Phase 9.6 — Multi-membres d'une même société ✅ TERMINÉE (2026-05-31)
+
+#### Concept introduit : plusieurs employés d'une même société
+Une TVA peut désormais être partagée entre plusieurs comptes. Le premier inscrit fonde la société (company_admin). Les suivants la rejoignent via auto-join (domaine email) ou join request.
+
+#### Modèle et migrations
+- `companies.email_domain` (nullable) — domaine professionnel pour auto-join
+- `company_join_requests` — status `pending/approved/rejected/cancelled`, source liée à user + company
+
+#### Actions ajoutées (`app/Actions/Company/`)
+- `CreateCompanyFromMemberSpaceAction` — création self-service depuis l'espace membre
+- `AutoJoinCompanyByEmailDomainAction` — rattachement immédiat par domaine email (jamais company_admin)
+- `RequestCompanyJoinAction` — demande d'adhésion pending
+- `ApproveCompanyJoinRequestAction` — approval par company_admin
+- `RejectCompanyJoinRequestAction` — rejet avec raison
+- `CancelCompanyJoinRequestAction` — annulation self-service par le demandeur
+- `AssignCompanyAdminAction` — réassignation forcée par super admin
+- `TransferCompanyAdminAction` — succession automatique au soft-delete
+
+#### Observers
+- `UserObserver` — succession sur `deleted()` et réassignation sur `updated(company_id)`
+
+#### Notifications (toutes `ShouldQueue`)
+- `CompanyAutoJoinedNotification` — admin notifié lors d'un auto-join
+- `CompanyJoinRequestedNotification` — admin notifié d'une nouvelle demande
+- `CompanyJoinApprovedNotification` — demandeur notifié d'approbation
+- `CompanyJoinRejectedNotification` — demandeur notifié de rejet
+- `CompanyAdminAssignedNotification` — user notifié de sa nomination admin
+- `CompanyAdminRevokedNotification` — user notifié de la perte du rôle
+- `CompanyAdminVacantNotification` — super admins notifiés si aucun successeur
+
+#### Controllers et vues (espace membre)
+- `CompanyController` — création société self-service
+- `CompanyJoinRequestController` — rejoindre, lookup TVA, annuler demande
+- `CompanyMembersController` — gestion membres (company_admin)
+- Vues : `espace/societe/creer.blade.php`, `rejoindre.blade.php`, `membres.blade.php`
+- `espace/profil.blade.php` — bannières flash + section société + CTA contextuels
+- `layouts/navigation.blade.php` — lien "Mes membres" pour company_admins, "Panel admin" pour admins
+
+#### Filament back-office
+- `UsersTable` : colonne rôle (Super admin / Admin société / Membre) + action `setAsCompanyAdmin`
+- `CompanyForm` : champ `email_domain`
+- `EditCompany` : action `reassignAdmin` (super admin seulement)
+- `CompanyMembersRelationManager` (read-only) + `PendingJoinRequestsRelationManager` (read-only)
+
+#### Sécurité
+- Guard-fous testés : jamais `company_admin` assigné sur cas 2 et cas 3
+- Anti-hijacking : rejeté → orienté (join request), log "Demande d'adhésion soumise" (pas "Tentative")
+- `isCompanyAdmin($company)` vérifie role AND `company_id` — souveraineté contextuelle
+
+#### Tests Pest — 611 tests verts (avant Phase 9.6 : 475)
+- `CompanyControllerTest` (7), `CompanyJoinRequestControllerTest` (12), `CompanyMembersControllerTest` (7)
+- `MultiMembersNavigationTest` (4), `RegistrationMultiMembersTest` (10)
+- `CompanyHijackingTest` mis à jour — 7 tests (dont 2 garde-fous `hasRole('company_admin')->toBeFalse()`)
+- `UserResourceCompanyAdminTest` (5), `CompanyResourceMembersTest` (4)
+- `MultiMembersFullJourneyTest` — 1 test end-to-end, 22 assertions, 8 étapes
+
+**Backlog Phase 9.6 → à implémenter plus tard :**
+- `CompanyJoinRequestResource` Filament read-only (approbation/rejet depuis le panel admin)
+- Détection hijacking avancée (divergence nom/adresse VIES vs données existantes)
+- Extraction logique VAT en Action partagée (actuellement dupliquée dans controller + vatLookup)
+- 2FA admin (Filament 5 sans natif, estimation > 2h)
+- Déploiement production (HTTPS, TrustProxies, storage:link, monitoring, backup)
 
 ---
 

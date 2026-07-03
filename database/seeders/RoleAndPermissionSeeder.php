@@ -13,5 +13,6 @@ class RoleAndPermissionSeeder extends Seeder
 
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'company_admin', 'guard_name' => 'web']);
     }
 }

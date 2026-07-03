@@ -67,7 +67,7 @@ it('filter current_month works', function () {
     $lastMonth = Order::factory()->create([
         'user_id'  => $admin->id,
         'status'   => OrderStatus::Paid,
-        'paid_at'  => now()->subMonth(),
+        'paid_at'  => now()->startOfMonth()->subDay(), // dernier jour du mois précédent, sans recalage fin de mois
     ]);
 
     $component = Livewire::actingAs($admin)
