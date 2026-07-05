@@ -43,8 +43,7 @@ Une école/société organise des **tables de conversation en néerlandais** (pr
 ### 2.4 Liste d'attente
 - Quand une table est complète, l'utilisateur peut s'inscrire en **liste d'attente** (`waitlist_position` chronologique).
 - Quand une place se libère (annulation, déplacement admin), **alerte mail à l'admin** avec la liste d'attente classée par ordre d'arrivée.
-- **L'admin promeut manuellement** depuis la liste d'attente — pas de promotion automatique pour le moment.
-- Prévoir un paramètre `waitlist_auto_promote` (défaut `false`) pour activer la promotion auto plus tard sans refactor.
+- **Promotion automatique FIFO activée par défaut** (`waitlist_auto_promote`, défaut `true` — décision Phase 5, mai 2026, cf. `docs/PHASE_5_BRIEF.md` §1). Si désactivée, seule la promotion manuelle admin fonctionne. Si le premier de la waitlist n'a pas de carte active, la place reste libre (pas de saut au suivant).
 
 ### 2.5 Validation des inscriptions par l'admin
 - Inscription **automatique** côté utilisateur si toutes les règles passent.
@@ -298,7 +297,7 @@ app/
 - `max_future_registrations: int` (défaut 3)
 - `post_cancellation_card_extension_days: int` (défaut 30)
 - `post_cancellation_extension_threshold_days: int` (défaut 30)
-- `waitlist_auto_promote: bool` (défaut false)
+- `waitlist_auto_promote: bool` (défaut true — décision Phase 5, mai 2026)
 
 ### `CardSettings`
 - `default_validity_months: int` (défaut 12)
@@ -476,7 +475,7 @@ $schedule->command('app:mark-no-shows')->dailyAt('23:59');
 À Claude Code : ne pas dévier des points suivants sans validation explicite.
 
 1. **Pas de partage de cartes entre utilisateurs** d'une même société. C'est un user, une carte.
-2. **Pas de promotion automatique** depuis la liste d'attente. Manuelle uniquement (paramètre prévu pour plus tard).
+2. **La promotion automatique FIFO respecte strictement le flag `waitlist_auto_promote`** (défaut `true`, décision Phase 5). Ne jamais contourner le flag.
 3. **Numérotation des factures** : un compteur dédié verrouillé en transaction, **jamais** basé sur l'ID auto-increment.
 4. **Snapshots immuables** sur orders et invoices : ne JAMAIS modifier les snapshots après création.
 5. **Jours ouvrables** : passer par `BusinessDayService`, ne pas recoder le calcul. Inclure les fériés belges (Carnaval, Pâques, Ascension, Pentecôte, fête nationale, Toussaint, Armistice, Noël, etc.).
@@ -574,7 +573,7 @@ Quand un admin retire un inscrit ou un waitlisté d'une session, la personne peu
 - Templates Markdown dans `resources/views/emails/global-pool/`
 
 #### Corrections et complétions
-- `AdminPanelProvider` → `->viteTheme('resources/css/app.css')` (fix SVG géant dans modales)
+- `viteTheme` : fix envisagé Phase 8 mais jamais activé (ligne introduite commentée). Bug SVG non reproduit — vérification visuelle M0 (2026-07). Ligne morte supprimée au micro-patch DOC-1.
 - `tailwind.config.js` → ajout couleurs sémantiques `warning`, `danger`, `success`, `info`
 - `RegisterUserToTableActionTest` → corrigé bug timing ISO-semaine (jeudi/vendredi)
 
@@ -678,7 +677,7 @@ Une TVA peut désormais être partagée entre plusieurs comptes. Le premier insc
 - Anti-hijacking : rejeté → orienté (join request), log "Demande d'adhésion soumise" (pas "Tentative")
 - `isCompanyAdmin($company)` vérifie role AND `company_id` — souveraineté contextuelle
 
-#### Tests Pest — 611 tests verts (avant Phase 9.6 : 475)
+#### Tests Pest — 616 tests verts (avant Phase 9.6 : 475 ; delta réel +141, cf. note de comptage `docs/PHASE_10_M0_REPORT.md`)
 - `CompanyControllerTest` (7), `CompanyJoinRequestControllerTest` (12), `CompanyMembersControllerTest` (7)
 - `MultiMembersNavigationTest` (4), `RegistrationMultiMembersTest` (10)
 - `CompanyHijackingTest` mis à jour — 7 tests (dont 2 garde-fous `hasRole('company_admin')->toBeFalse()`)
